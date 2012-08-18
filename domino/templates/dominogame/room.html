@@ -18,6 +18,11 @@
     <script type="text/javascript" charset="utf-8">
 
         $(document).ready(function() {
+            load_game_status();
+            start_comet_channel();
+        });
+
+        function start_comet_channel() {
             stomp = new STOMPClient();
             stomp.onopen = function(){
                 //console.log("opening stomp client");
@@ -45,16 +50,24 @@
             };
             stomp.connect('{{ STOMP.host }}', {{ STOMP.port }});
 
+        }
+
+        function load_game_status() {
             $.ajax({
                 url: '{% url load_game_status room.id %}',
                 dataType: 'JSON',
                 success: function (data) {
                     console.log(data);
+                    if(data['status'] == 1) {
+                        $('#status').html('{% trans "started" %}');
+                    } else {
+                        $('#status').html('{% trans "not started" %}');
+                    }
+
+                   // for each
                 }
             });
-
-
-        });
+        }
 
     </script>
 {% endblock %}
@@ -62,34 +75,7 @@
 {% block content %}
 <h1>Room: {{ room }}</h1>
 <p id="test">TEST</p>
-{% endblock %}
 
-
-{% block extra_js %}
-<script type="text/javascript">
-    $(document).ready(
-            function() {
-                load_game_status();
-                start_comet_channel();
-            });
-
-    function load_game_status() {
-        $.post("{% url domino_load_game_status rook.pk %}", function(xml) {
-            if(xml['status'] == 1) {
-                $('#status').html('{% trans "started" %}');
-            } else {
-                $('#status').html('{% trans "not started" %}');
-            }
-
-            for each
-        });
-    }
-</script>
-{% endblock %}
-
-
-
-{% block content %}
     <div class="span12">
         <div class="page-header">
             <h1>{% trans "Game" %}: {{ room.pk }} <span id="status"></span></h1>

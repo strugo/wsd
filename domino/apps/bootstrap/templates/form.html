@@ -1,0 +1,30 @@
+{% load bootstrap %}
+
+{% for error in  form.non_field_errors %}
+    <div class="alert-message danger">
+        {{ error }}
+    </div>
+{% endfor %}
+
+{% for field in form.hidden_fields %}
+    {{ field }}
+{% endfor %}
+
+{% for field in form.visible_fields %}
+    <div class="control-group{% if field.errors %} error{% endif %}">
+
+            <label>{% autoescape off %}{% if field.field.required %}<strong>{% endif %}{{ field.label }} {% endautoescape %}{% if field.field.required %} <span class="required">*</span> {% endif %}{% if field.field.required %}</strong>{% endif %}</label>
+            <div class="controls">
+            {{ field }}
+            <span class="help-block">
+                {% autoescape off %}{{ field.help_text }}{% endautoescape %}
+                </span>
+            {% if field.errors %}
+                {% for error in field.errors %}
+                    <span class="help-block">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
+            </div>
+
+    </div>
+{% endfor %}

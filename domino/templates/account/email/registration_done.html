@@ -1,0 +1,7 @@
+{% load i18n %}
+<html>
+<body>
+<p>{% blocktrans %}Congratulations!!! {{ user.username }}! You have registered on site {% endblocktrans %}{{ PROJECT_NAME }}</p>
+<p>{% blocktrans %}Your login{% endblocktrans %}: {{ user.username }}</p>
+</body>
+</html>

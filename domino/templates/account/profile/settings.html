@@ -1,0 +1,40 @@
+{% extends "account/profile/base.html" %}
+{% load bootstrap %}
+{% load i18n %}
+{% block profile_content %}
+    <div class="page-header">
+        <h2>{% trans "User" %}: {{ request.user.username }}</h2>
+    </div>
+
+    <div class="row">
+        <div class="span12">
+            <div class="well">
+                <h3>{% trans "Contacts" %}</h3>
+                <form method="POST" class="form-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="profile">
+                    {{ form1|bootstrap }}
+                    <div class="form-actions">
+                        <input type="submit" class="btn btn-primary" value="{% trans "Save" %}" />
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="span12">
+            <div class="well">
+                <h3>{% trans "Password" %}</h3>
+                <form method="POST" class="form-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="password">
+                    {{ form2|bootstrap }}
+                    <div class="form-actions">
+                        <input type="submit" class="btn btn-primary" value="{% trans "Change password" %}" />
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

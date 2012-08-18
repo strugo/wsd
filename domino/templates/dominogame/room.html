@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-
+{% load i18n %}
 {% block content %}
 <h1>Room: {{ room }}</h1>
 <h2>ME: {{ member }}</h2>
@@ -13,3 +13,45 @@
 {% endfor %}
 {% endblock %}
 
+
+{% block extra_js %}
+<script type="text/javascript">
+    $(document).ready(
+            function() {
+                load_game_status();
+                start_comet_channel();
+            });
+
+    function load_game_status() {
+        $.post("{% url domino_load_game_status rook.pk %}", function(xml) {
+            if(xml['status'] == 1) {
+                $('#status').html('{% trans "started" %}');
+            } else {
+                $('#status').html('{% trans "not started" %}');
+            }
+
+            for each
+        });
+    }
+</script>
+{% endblock %}
+
+
+
+{% block content %}
+    <div class="span12">
+        <div class="page-header">
+            <h1>{% trans "Game" %}: {{ room.pk }} <span id="status"></span></h1>
+        </div>
+        <div class="row">
+            <div id="user0"></div>
+            <div id="user1"></div>
+            <div id="user2"></div>
+            <div id="user3"></div>
+
+            <div id="bank"></div>
+
+            <div id="gamefield"></div>
+        </div>
+    </div>
+{% endblock %}

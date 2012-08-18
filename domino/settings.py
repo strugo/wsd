@@ -156,7 +156,7 @@ CACHES = {
 ### CMS context
 PROJECT_TITLE = u"Domino"
 
-
+from django.contrib import messages
 MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'
 MESSAGE_TAGS = {
     messages.DEBUG: 'error',

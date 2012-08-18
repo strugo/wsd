@@ -1,11 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-<p>Hello: {{ user }}</p>
 <div>
 <p>Menu</p>
 <ul>
-<li>Play</li>
+<li><a href="{% url room_select %}">Play</a></li>
 <li>Home</li>
 <li>Rules</li>
 {% if user.is_authenticated %}

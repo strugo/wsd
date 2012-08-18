@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<a href="{% url room_create %}">Create new room</a><br />
+or select from list:<br />
+<table border=1>
+{% for room in open_room_list %}
+    <tr>
+        <td>{{ room }}</td>
+        <td><a href="{% url join_to_room room.id %}">Join</a></td>
+    </tr>
+{% endfor %}
+</table>
+{% endblock %}

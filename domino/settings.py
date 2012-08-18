@@ -118,6 +118,7 @@ INSTALLED_APPS = (
 
     'account',
     'core',
+    'dominogame',
 )
 
 LOGGING = {

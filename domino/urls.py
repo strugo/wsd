@@ -8,6 +8,7 @@ admin.autodiscover()
 urlpatterns = patterns('',
     url(r'^', include('core.urls')),
     url(r'^', include('account.urls')),
+    url(r'game/', include('dominogame.urls')),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^captcha/(?P<code>[\da-f]{32})/$', 'supercaptcha.draw')
 )

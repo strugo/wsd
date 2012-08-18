@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import datetime
 import json
 
 from django.http import HttpResponse
@@ -123,7 +122,8 @@ def room(request, room_id):
     return render_to_response("dominogame/room.html", data, context_instance=RequestContext(request))
 
 
-def step(request, room_id):
+def game_step(request, room_id):
+    msg_to_send = ''
     try:
         room = GameRoom.objects.get(id=room_id)
     except GameRoom.DoesNotExist:
@@ -133,8 +133,28 @@ def step(request, room_id):
         conn.start()
         conn.connect()
         conn.subscribe(destination='/%s' % room.comet_id, ack='auto')
-        time = datetime.datetime.now()
-        msg_to_send = json.dumps({"time":time.strftime("%H:%S-%d/%m/%Y")})
-        conn.send(msg_to_send)
+
+        try:
+            chip_id = int(request.POST.get('chip_id'))
+        except (ValueError, TypeError):
+            pass
+        else:
+            member = room.get_member(request.user)
+            try:
+                chip = member.chips.filter(id=chip_id)[0]
+            except IndexError:
+                pass
+            else:
+                room_json = room.to_JSON()
+                msg_to_send = json.dumps({
+                    'room': room_json,
+                    'chip': {
+                        'chip_id': chip.id,
+                        'left': chip.left,
+                        'right': chip.right,
+                    },
+                })
+
+        conn.send(msg_to_send, destination='/%s' % room.comet_id)
     return HttpResponse("ok")
 

@@ -51,8 +51,10 @@ class GameRoom(models.Model):
     def __int__(self):
         return self.pk
 
+
     def get_absolute_url(self):
         return reverse('domino_game_room', args=[self.pk, ])
+
 
     @classmethod
     def create_game(cls):
@@ -80,6 +82,7 @@ class GameRoom(models.Model):
                 GameChip.objects.create(**data)
         return room
 
+
     def get_chip(self):
         '''
         Return new chip from bank
@@ -90,6 +93,7 @@ class GameRoom(models.Model):
         except IndexError:
             return None
 
+
     def get_random_chip(self):
         '''
         Return new random chip from bank
@@ -99,6 +103,7 @@ class GameRoom(models.Model):
             return self.room_chips.all().filter(used=False).order_by('?')[0]
         except IndexError:
             return None
+
 
     def join_member(self, user):
         '''
@@ -118,10 +123,24 @@ class GameRoom(models.Model):
             member.save()
         return member
 
+
+    def get_member(self, user):
+        '''
+        Return game member by user or None
+        '''
+        try:
+            return self.room_members.filter(user=user)[0]
+        except IndexError:
+            return None
+
+
     def to_JSON(self, user=None):
         members = []
         for m in self.room_members.all():
-            members.append((m.user.username, m.chips.count()))
+            members.append({
+                'username': m.user.username,
+                'chips_count': m.chips.count(),
+            })
 
         game = []
 
@@ -133,7 +152,11 @@ class GameRoom(models.Model):
                 pass
             else:
                 for c in member.chips.all():
-                    my_chips.append((c.id, c.left, c.right))
+                    my_chips.append({
+                        'id': c.id,
+                        'left': c.left,
+                        'right': c.right,
+                    })
 
         data = {
             'members': members,

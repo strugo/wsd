@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
+
+import hashlib
+import datetime
+import json
+
 from django.utils.translation import ugettext as _
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+from django.conf import settings
+
 
 CHIP_VALUES = (
     (0, 'empty'),
@@ -44,8 +51,10 @@ class GameRoom(models.Model):
     def __int__(self):
         return self.pk
 
+
     def get_absolute_url(self):
         return reverse('domino_game_room', args=[self.pk, ])
+
 
     @classmethod
     def create_game(cls):
@@ -56,6 +65,13 @@ class GameRoom(models.Model):
         return GameRoom object
         '''
         room = cls.objects.create()
+        hash_str = u'%s+%s+%s' % (
+            str(datetime.datetime.now()),
+            settings.SECRET_KEY,
+            room.id,
+        )
+        room.comet_id = hashlib.md5(hash_str).hexdigest()
+        room.save()
         for left in CHIP_VALUES:
             for right in CHIP_VALUES:
                 data = {
@@ -66,6 +82,7 @@ class GameRoom(models.Model):
                 GameChip.objects.create(**data)
         return room
 
+
     def get_chip(self):
         '''
         Return new chip from bank
@@ -75,6 +92,7 @@ class GameRoom(models.Model):
             return self.room_chips.all().filter(used=False)[0]
         except IndexError:
             return None
+
 
     def get_random_chip(self):
         '''
@@ -94,7 +112,6 @@ class GameRoom(models.Model):
         '''
         try:
             member = GameMember.objects.filter(room=self, user=user)[0]
-            print member
         except IndexError:
             member = GameMember.objects.create(room=self, user=user)
             for i in xrange(5):
@@ -105,6 +122,49 @@ class GameRoom(models.Model):
                     member.chips.add(chip)
             member.save()
         return member
+
+
+    def get_member(self, user):
+        '''
+        Return game member by user or None
+        '''
+        try:
+            return self.room_members.filter(user=user)[0]
+        except IndexError:
+            return None
+
+
+    def to_JSON(self, user=None):
+        members = []
+        for m in self.room_members.all():
+            members.append({
+                'username': m.user.username,
+                'chips_count': m.chips.count(),
+            })
+
+        game = []
+
+        my_chips = []
+        if user:
+            try:
+                member = GameMember.objects.filter(room=self, user=user)[0]
+            except IndexError:
+                pass
+            else:
+                for c in member.chips.all():
+                    my_chips.append({
+                        'id': c.id,
+                        'left': c.left,
+                        'right': c.right,
+                    })
+
+        data = {
+            'members': members,
+            'game': game,
+            'my_chips': my_chips,
+        }
+
+        return json.dumps(data)
 
 
 class GameChip(models.Model):

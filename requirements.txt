@@ -1,5 +1,9 @@
 django>=1.4
 south
-orbited
 supercaptcha
+
+#For games engien
+twisted
+orbited
+stomp.py
 

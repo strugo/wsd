@@ -39,6 +39,18 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
+DOMAIN = 'dominatore.com'
+
+ORBITED = {
+    'host': DOMAIN,
+    'port': 9000.
+}
+
+STOMP = {
+    'host': 'localhost',
+    'port': 61613,
+}
+
 MEDIA_ROOT = os.path.join(PROJECT_PATH, 'files/media/')
 MEDIA_URL = '/media/'
 STATIC_ROOT = ''

@@ -1,20 +1,8 @@
 {% extends "base.html" %}
 {% load i18n %}
-{% block content %}
-<h1>Room: {{ room }}</h1>
-<h2>ME: {{ member }}</h2>
-{% for chip in member.chips.all %}
- {{ chip }}<br />
-{% endfor %}
-
-<h2>Members list</h2>
-{% for m in room.room_members.all %}
- -- {{ m }}<br />
-{% endfor %}
-{% endblock %}
-
 
 {% block extra_js %}
+{% comment %}
 <script type="text/javascript">
 
     var start_x = 20;
@@ -61,24 +49,199 @@
         }
     }
 </script>
+{% endcomment %}
+    <script src="/static/js/json2.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js" type="text/javascript"></script>
+    <script src="/static/orbited/Orbited.js"></script>
+    <script>
+        // set the orbited settings and port
+        Orbited.settings.port = {{ ORBITED.port }};
+        Orbited.settings.hostname = "{{ ORBITED.host }}";
+        //Orbited.settings.streaming = false;
+        TCPSocket = Orbited.TCPSocket
+    </script>
+    <script> document.domain = document.domain; </script>
+    <script src="/static/orbited/protocols/stomp/stomp.js"></script>
+
+    <script type="text/javascript" charset="utf-8">
+
+        jQuery(document).ajaxSend(function(event, xhr, settings) {
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie != '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        function sameOrigin(url) {
+            // url could be relative or scheme relative or absolute
+            var host = document.location.host; // host + port
+            var protocol = document.location.protocol;
+            var sr_origin = '//' + host;
+            var origin = protocol + sr_origin;
+            // Allow absolute or scheme relative URLs to same origin
+            return (url == origin || url.slice(0, origin.length + 1) == origin + '/') ||
+                (url == sr_origin || url.slice(0, sr_origin.length + 1) == sr_origin + '/') ||
+                // or any other URL that isn't scheme relative or absolute i.e relative.
+                !(/^(\/\/|http:|https:).*/.test(url));
+        }
+        function safeMethod(method) {
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        }
+
+        if (!safeMethod(settings.type) && sameOrigin(settings.url)) {
+            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+        }
+    });
+
+    function Chip(id, left, right) {
+        //Temporary chip object
+        this.id = id;
+        this.left = left;
+        this.right = right;
+
+        this.on_table = false;
+
+        this.get_html = function () {
+            var self = this;
+            $table = $('<div class="chip_0 my_chip">');
+            $table.append($('<img src="/static/images/value_0_'+this.left+'.png">'));
+            $table.append($('<img src="/static/images/value_0_'+this.right+'.png">'));
+            $table.attr('id', 'chip_'+self.id);
+
+            $table.click(function () {
+                if (self.on_table == true)
+                    return
+                self.on_table = true;
+                var data = {
+                    chip_id: self.id
+                }
+                $.ajax({
+                    url: '{% url game_step room.id %}',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: data,
+                    success: function (data) {
+                    },
+                    error: function (r) {
+                        console.log(r);
+                    }
+                });
+            });
+
+            return $table[0]
+        }
+
+        this.create_on_table = function () {
+            this.on_table = true;
+            var html = this.get_html()
+            $(html).appendTo($('#gamefield'));
+        }
+
+        return this;
+    }
+
+    $(document).ready(function() {
+        load_game_status();
+        start_comet_channel();
+    });
+
+    function start_comet_channel() {
+        stomp = new STOMPClient();
+        stomp.onopen = function(){
+            //console.log("opening stomp client");
+        };
+        stomp.onclose = function(c){
+            alert('Lost Connection, Code: ' + c);
+        };
+        stomp.onerror = function(error){
+            alert("Error: " + error);
+        };
+        stomp.onerrorframe = function(frame){
+            alert("Error: " + frame.body);
+        };
+        stomp.onconnectedframe = function(){
+            console.log("Connected. Subscribing");
+            //alert("subscribing");
+            stomp.subscribe("/{{ room.comet_id }}");
+        };
+        stomp.onmessageframe = function(frame){
+            data = $.parseJSON(frame.body);
+            console.log(data);
+
+            $('#chip_'+data.chip.chip_id).remove();
+            var chip = new Chip(data.chip.chip_id, data.chip.left, data.chip.right);
+            console.log(chip);
+            chip.create_on_table();
+        };
+        stomp.connect('{{ STOMP.host }}', {{ STOMP.port }});
+
+    }
+
+    function load_game_status() {
+        $.ajax({
+            url: '{% url load_game_status room.id %}',
+            dataType: 'json',
+            success: function (data) {
+                if(data['status'] == 1) {
+                    $('#status').html('{% trans "started" %}');
+                } else {
+                    $('#status').html('{% trans "not started" %}');
+                }
+
+                $(data.members).each(function (i, e) {
+                    $('#user'+i).text(e.username+' '+ e.chips_count);
+                });
+
+                var my_chips_container = $('#my_chips');
+                console.log(data);
+                $(data.my_chips).each(function (i, e) {
+                    var chip = new Chip(e.id, e.left, e.right);
+                    my_chips.appendChild(chip.get_html());
+                });
+            }
+        });
+    }
+
+    </script>
 {% endblock %}
 
-
-
 {% block content %}
-    <div class="span12">
-        <div class="page-header">
-            <h1>{% trans "Game" %}: {{ room.pk }} <span id="status"></span></h1>
+    <div class="row">
+        <div class="span12">
+            <div class="page-header">
+                <h1>{% trans "Game" %}: {{ room.pk }} <span id="status"></span></h1>
+            </div>
         </div>
-        <div class="row">
-            <div id="user0"></div>
-            <div id="user1"></div>
-            <div id="user2"></div>
-            <div id="user3"></div>
-
-            <div id="bank"></div>
-
-            <div id="gamefield"></div>
+        <div class="span12 well gamemain">
+            <div class="row">
+                <div class="row">
+                    <div class="span2"></div>
+                    <div id="user2" class="span8"></div>
+                    <div class="span2"></div>
+                </div>
+                <div class="row">
+                    <div class="span2" id="user1"></div>
+                    <div class="span8" id="gamefield"></div>
+                    <div class="span2" id="user3"></div>
+                </div>
+                <div class="row">
+                    <div id="bank" class="span2"></div>
+                    <div id="my_chips" class="span8" ></div>
+                </div>
+                <div class="row">
+                    <div class="span12"></div>
+                    <div class="span12"></div>
+                </div>
+            </div>
         </div>
     </div>
 {% endblock %}

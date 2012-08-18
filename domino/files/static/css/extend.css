@@ -1,3 +1,63 @@
 .login {
     margin: 10px auto;
 }
+
+
+.gamemain {
+    height: 600px;
+}
+
+#user1 {
+    height: 400px;
+}
+
+#user3 {
+    height: 400px;
+}
+
+#user2 {
+    height: 100px;
+}
+
+#my_chips {
+    height: 100px;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+#bank {
+    height: 100px;
+}
+
+#gamefield {
+    height: 400px;
+}
+
+.chip_0 {
+    width: 41px;
+    height: 80px;
+    background-image: url(/static/images/chip_0_0.png);
+    background-repeat: no-repeat;
+}
+
+.chip_1 {
+    width: 80px;
+    height: 41px;
+    background-image: url(/static/images/chip_1_0.png);
+    background-repeat: no-repeat;
+}
+
+.my_chip {
+    float: left;
+    margin: 1px 3px 1px 1px;
+}
+
+.my_chip:hover {
+    border: 1px solid green;
+    margin: 0px 2px 0px 0px;
+}
+
+.my_selected {
+    border: 1px solid green;
+    margin: 0px 2px 0px 0px;
+}

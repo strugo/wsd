@@ -5,6 +5,9 @@
 
 .gamemain {
     height: 600px;
+    position: relative;
+    left:0;
+    top:0;
 }
 
 #user1 {
@@ -30,7 +33,12 @@
 }
 
 #gamefield {
+    position: absolute;
+    left: 120px;
+    top: 120px;
     height: 400px;
+    width: 700px;
+    background-color: black;
 }
 
 .chip_0 {

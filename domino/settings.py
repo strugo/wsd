@@ -157,6 +157,15 @@ CACHES = {
 PROJECT_TITLE = u"Domino"
 
 
+MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'
+MESSAGE_TAGS = {
+    messages.DEBUG: 'error',
+    messages.INFO: 'info',
+    messages.SUCCESS: 'info',
+    messages.WARNING: 'warning',
+    messages.ERROR: 'error',
+    }
+
 ###############################################################################
 
 try:

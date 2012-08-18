@@ -108,7 +108,6 @@ hr {
     min-height: 650px;
     margin: 20px 0;
     padding: 20px;
-    background-color: #828282;
     overflow-x: hidden;
     overflow-y: auto;
     box-shadow: 0px 0px 5px #000;
@@ -435,25 +434,30 @@ table tr td {
     padding: 5px;
 }
 
-.gamemain {
+#gamemain {
     height: 800px;
     position: relative;
     left:0;
     top:0;
+    color: black;
 }
 
 #user1 {
     position: absolute;
     left: 10px;
-    top: 100px;
-    height: 400px;
+    top: 110px;
+    height: 350px;
+    width: 120px;
+    overflow-y: auto;
 }
 
 #user3 {
     position: absolute;
     right: 10px;
-    top: 100px;
-    height: 400px;
+    top: 110px;
+    height: 350px;
+    width: 120px;
+    overflow-y: auto;
 }
 
 #user2 {
@@ -461,12 +465,13 @@ table tr td {
     left: 110px;
     top: 10px;
     height: 100px;
+    overflow-x: auto;
 }
 
 #my_chips {
     position: absolute;
     left: 110px;
-    top: 520px;
+    top: 460px;
     height: 100px;
     overflow-x: auto;
     overflow-y: hidden;
@@ -475,22 +480,26 @@ table tr td {
 #bank {
     position: absolute;
     right: 10px;
-    top: 520px;
+    top: 560px;
     height: 100px;
 }
 
 #gamefield {
     position: absolute;
-    left: 110px;
-    top: 110px;
-    height: 400px;
-    width: 780px;
+    left: 130px;
+    top: 90px;
+    height: 368px;
+    width: 742px;
+    margin: 0;
+    padding: 0;
     background-color: black;
+    background-image: url(/static/images/arena.png);
+    background-repeat: no-repeat;
 }
 
 .chip_0 {
-    width: 41px;
-    height: 80px;
+    width: 70px;
+    height: 35px;
     background-image: url(/static/images/chip_0_0.png);
     background-repeat: no-repeat;
 }
@@ -500,11 +509,13 @@ table tr td {
     padding: 0px;
     margin: 0px;
     float: left;
+    width: 35px;
+    height: 35px;
 }
 
 .chip_1 {
-    width: 80px;
-    height: 41px;
+    width: 70px;
+    height: 35px;
     background-image: url(/static/images/chip_1_0.png);
     background-repeat: no-repeat;
 }
@@ -514,16 +525,22 @@ table tr td {
     padding: 0px;
     margin: 0px;
     float: left;
+    width: 35px;
+    height: 35px;
 }
 
 .my_chip {
     float: left;
     margin: 2px 3px 2px 2px;
+    width: 35px;
+    height: 70px;
 }
 
 .my_chip img {
     margin: 0;
     padding: 0;
+    width: 35px;
+    height: 35px;
     float: left;
 }
 
@@ -540,8 +557,8 @@ table tr td {
 .hidden_chip_0 {
     background-image: url(/static/images/chip_back_0.png);
     background-repeat: no-repeat;
-    width: 41px;
-    height: 80px;
+    width: 35px;
+    height: 70px;
     margin: 0 3px;
 
 }
@@ -549,8 +566,8 @@ table tr td {
 .hidden_chip_1 {
     background-image: url(/static/images/chip_back_1.png);
     background-repeat: no-repeat;
-    width: 80px;
-    height: 41px;
+    width: 70px;
+    height: 35px;
     margin: 3px 0;
 }
 
@@ -563,6 +580,8 @@ table tr td {
     background: black;
     margin: 0;
     padding: 0;
+    background-color: #dbc9a7;
+    border-radius: 5px;
 }
 
 #chat_input {
@@ -571,8 +590,64 @@ table tr td {
     left: 0px;
     width: 960px;
     height: 20px;
+    overflow-y: auto;
 }
 
 #chat_input_string {
-    width: 955px;
+    width: 935px;
+    background-color: #dbc9a7;
+    border: 0px;
+    border-top: 1px solid black;
+    padding: 0;
+    margin: 0 5px;
+}
+
+.position_absolute {
+    position: absolute;
+    float: none;
+}
+
+#username_1 {
+    background-image: url(/static/images/name_1.png);
+    background-repeat: no-repeat;
+    width: 96px;
+    height: 51px;
+    line-height: 51px;
+    vertical-align: middle;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#username_2 {
+    background-image: url(/static/images/name_2.png);
+    background-repeat: no-repeat;
+    width: 96px;
+    height: 60px;
+    line-height: 51px;
+    vertical-align: middle;
+    text-align: center;
+    margin-right: 20px;
+}
+
+#username_3 {
+    background-image: url(/static/images/name_3.png);
+    background-repeat: no-repeat;
+    width: 96px;
+    height: 51px;
+    line-height: 51px;
+    vertical-align: middle;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#username_me {
+    background-image: url(/static/images/name_1.png);
+    background-repeat: no-repeat;
+    width: 96px;
+    height: 51px;
+    margin-right: 20px;
+    line-height: 51px;
+    vertical-align: middle;
+    text-align: center;
+    float: left;
 }

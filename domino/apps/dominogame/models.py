@@ -139,6 +139,7 @@ class GameRoom(models.Model):
         for m in self.room_members.all():
             members.append({
                 'username': m.user.username,
+                'id': m.user.pk,
                 'chips_count': m.chips.count(),
             })
 

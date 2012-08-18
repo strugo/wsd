@@ -65,12 +65,17 @@
 
     <script type="text/javascript" charset="utf-8">
 
-        var me = {{ request.user.pk }};
+        var my_id = {{ request.user.pk }};
         //var my_turn = false;
-        var my_turn = true;
+        var my_turn = false;
         var table = {};
         var my_selected_chip = null;
         var table_selected_chip = null;
+
+        var start_x = 350;
+        var start_y = 330;
+
+        var users = {};
 
         jQuery(document).ajaxSend(function(event, xhr, settings) {
         function getCookie(name) {
@@ -205,7 +210,35 @@
         stomp.onmessageframe = function(frame){
             data = $.parseJSON(frame.body);
             console.log(data);
-
+            switch (data.action) {
+                case ('ping'): {
+                    break;
+                }
+                case ('game_start'): {
+                    break;
+                }
+                case ('game_end'): {
+                    break;
+                }
+                case ('delete_chip'): {
+                    break;
+                }
+                case ('place_chip'): {
+                    break;
+                }
+                case ('chat_message'): {
+                    break;
+                }
+                case ('user_out'): {
+                    break;
+                }
+                case ('new_user_chip'): {
+                    break;
+                }
+                case ('new_turn'): {
+                    break;
+                }
+            }
             $('#chip_'+data.chip.chip_id).remove();
             var chip = new Chip(data.chip.chip_id, data.chip.left, data.chip.right);
             console.log(chip);
@@ -226,18 +259,26 @@
                     $('#status').html('{% trans "not started" %}');
                 }
 
+                console.log(data);
+                n = 1;
                 $(data.members).each(function (i, e) {
-
-                    //$('#user'+i).text(e.username+' '+ );
-                    angle = 1;
-                    if (i == 2) {
-                        angle = 0;
-                    }
-                    step = 10;
-                    var container = $('#user'+i);
-                    for (var k=0;k<e.chips_count;k++) {
-                        var chip = HiddenChip(angle);
-                        container.append(chip.get_html());
+                    if (e.id == my_id) {
+                        $("#username_me").html(e.username);
+                    } else {
+                        //$('#user'+i).text(e.username+' '+ );
+                        users[e.id] = i;
+                        $("#username_"+n).html(e.username);
+                        angle = 1;
+                        if (i == 2) {
+                            angle = 0;
+                        }
+                        step = 10;
+                        var container = $('#user'+n);
+                        for (var k=0;k<e.chips_count;k++) {
+                            var chip = HiddenChip(angle);
+                            container.append(chip.get_html());
+                        }
+                        n++;
                     }
                 });
 
@@ -279,18 +320,61 @@
         return
     }
 
+    function game_start() {
+        $("#status").html('{% trans "Started" %}');
+    }
+
+    function count_offset(x, y) {
+        var offset = $('#gamefield').offset();
+        console.log(offset);
+        var data = {
+            top: y + offset.top,
+            left: x + offset.left
+        };
+        return data;
+    }
+
+    function place_new_chip(left, right, id, prev) {
+        if (!prev) {
+            // first chip
+            chip = Chip(id, left, right);
+            chip.angle = 1;
+            chip.on_table = 1;
+            $("#gamefield").append(chip.get_html());
+            $("#chip_"+id).offset(count_offset(start_x, start_y));
+        } else {
+            var prev = $("#chip_"+prev);
+
+        }
+    }
+
+    function delete_chip(id) {
+        var chip = $("#chip_"+id);
+        if (chip) {
+            chip.remove();
+        }
+    }
+
+    function new_user_chip(user_id) {
+        var id = users[user_id]
+        var angle = 1
+        if (id == 2) angle=0
+        var chip = HiddenChip(angle);
+        $('#user'+id).append(chip.get_html());
+    }
+
     </script>
 {% endblock %}
 
 {% block content %}
     <h1>{% trans "Game" %}: {{ room.pk }} <span id="status"></span></h1>
-    <div class="gamemain">
-            <div id="user2"></div>
-            <div id="user1"></div>
+    <div id="gamemain">
+            <div id="user2"><div id="username_2"></div></div>
+            <div id="user1"><div id="username_1"></div></div>
             <div id="gamefield"></div>
-            <div id="user3"></div>
+            <div id="user3"><div id="username_3"></div></div>
             <div id="bank"></div>
-            <div id="my_chips"></div>
+            <div id="my_chips"><div id="username_me"></div></div>
 
             <div id="chat">
                 <div id="chat_input"><form action="" onsubmit="send_chat_message()"><input type="text" id="chat_input_string"></form></div>

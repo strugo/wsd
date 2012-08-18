@@ -7,3 +7,4 @@ from django.template import RequestContext
 def index(request):
     data = {}
     return render_to_response("core/index.html", data, context_instance=RequestContext(request))
+

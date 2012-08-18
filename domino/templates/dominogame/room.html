@@ -1,15 +1,65 @@
 {% extends "base.html" %}
 
+{% block extra_js %}
+    <script src="/static/js/json2.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js" type="text/javascript"></script>
+    <script src="/static/orbited/Orbited.js"></script>
+    <script>
+        // set the orbited settings and port
+        Orbited.settings.port = {{ ORBITED.port }};
+        Orbited.settings.hostname = "{{ ORBITED.host }}";
+        //Orbited.settings.streaming = false;
+        TCPSocket = Orbited.TCPSocket
+    </script>
+    <script> document.domain = document.domain; </script>
+    <script src="/static/orbited/protocols/stomp/stomp.js"></script>
+
+    <script type="text/javascript" charset="utf-8">
+
+        $(document).ready(function() {
+            stomp = new STOMPClient();
+            stomp.onopen = function(){
+                //console.log("opening stomp client");
+            };
+            stomp.onclose = function(c){
+                alert('Lost Connection, Code: ' + c);
+            };
+            stomp.onerror = function(error){
+                alert("Error: " + error);
+            };
+            stomp.onerrorframe = function(frame){
+                alert("Error: " + frame.body);
+            };
+            stomp.onconnectedframe = function(){
+                console.log("Connected. Subscribing");
+                //alert("subscribing");
+                stomp.subscribe("/{{ room.comet_id }}");
+            };
+            stomp.onmessageframe = function(frame){
+                // Presumably we should only receive message frames with the
+                // destination "/topic/message" because that's the only destination
+                // to which we've subscribed. To handle multiple destinations we
+                // would have to check frame.headers.destination.
+                console.log(frame.body);
+            };
+            stomp.connect('{{ STOMP.host }}', {{ STOMP.port }});
+
+            $.ajax({
+                url: '{% url load_game_status room.id %}',
+                dataType: 'JSON',
+                success: function (data) {
+                    console.log(data);
+                }
+            });
+
+
+        });
+
+    </script>
+{% endblock %}
+
 {% block content %}
 <h1>Room: {{ room }}</h1>
-<h2>ME: {{ member }}</h2>
-{% for chip in member.chips.all %}
- {{ chip }}<br />
-{% endfor %}
-
-<h2>Members list</h2>
-{% for m in room.room_members.all %}
- -- {{ m }}<br />
-{% endfor %}
+<p id="test">TEST</p>
 {% endblock %}
 

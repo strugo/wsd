@@ -25,6 +25,17 @@ DATABASES = {
         }
 }
 
+DOMAIN = 'localhost'
+
+ORBITED = {
+    'host': DOMAIN,
+    'port': 9000.
+}
+
+STOMP = {
+    'host': 'localhost',
+    'port': 61613,
+}
 
 MEDIA_ROOT = os.path.join(PROJECT_PATH, 'files/media/')
 MEDIA_URL = '/media/'

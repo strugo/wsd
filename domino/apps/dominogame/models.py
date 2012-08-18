@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
+
+import hashlib
+import datetime
+import json
+
 from django.utils.translation import ugettext as _
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+from django.conf import settings
+
 
 CHIP_VALUES = (
     (0, 'empty'),
@@ -56,6 +63,13 @@ class GameRoom(models.Model):
         return GameRoom object
         '''
         room = cls.objects.create()
+        hash_str = u'%s+%s+%s' % (
+            str(datetime.datetime.now()),
+            settings.SECRET_KEY,
+            room.id,
+        )
+        room.comet_id = hashlib.md5(hash_str).hexdigest()
+        room.save()
         for left in CHIP_VALUES:
             for right in CHIP_VALUES:
                 data = {
@@ -86,7 +100,6 @@ class GameRoom(models.Model):
         except IndexError:
             return None
 
-
     def join_member(self, user):
         '''
         Get user and return game member.
@@ -94,7 +107,6 @@ class GameRoom(models.Model):
         '''
         try:
             member = GameMember.objects.filter(room=self, user=user)[0]
-            print member
         except IndexError:
             member = GameMember.objects.create(room=self, user=user)
             for i in xrange(5):
@@ -105,6 +117,31 @@ class GameRoom(models.Model):
                     member.chips.add(chip)
             member.save()
         return member
+
+    def to_JSON(self, user=None):
+        members = []
+        for m in self.room_members.all():
+            members.append((m.user.username, m.chips.count()))
+
+        game = []
+
+        my_chips = []
+        if user:
+            try:
+                member = GameMember.objects.filter(room=self, user=user)[0]
+            except IndexError:
+                pass
+            else:
+                for c in member.chips.all():
+                    my_chips.append((c.id, c.left, c.right))
+
+        data = {
+            'members': members,
+            'game': game,
+            'my_chips': my_chips,
+        }
+
+        return json.dumps(data)
 
 
 class GameChip(models.Model):

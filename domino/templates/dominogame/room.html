@@ -66,7 +66,8 @@
     <script type="text/javascript" charset="utf-8">
 
         var me = {{ request.user.pk }};
-        var my_turn = false;
+        //var my_turn = false;
+        var my_turn = true;
         var table = {};
         var my_selected_chip = null;
         var table_selected_chip = null;
@@ -108,42 +109,64 @@
         }
     });
 
-    function MyChip(id, left, right) {
+    function HiddenChip(angle) {
+        this.angle = angle;
+        this.get_html = function() {
+            var self = this;
+            $obj = $('<div class="hidden_chip_'+this.angle+'">&nbsp;</div>');
+            return $obj[0];
+        }
+        return this;
+    }
+
+    function Chip(id, left, right) {
         //Temporary chip object
         this.id = id;
         this.left = left;
         this.right = right;
+        this.angle = 0;
+        this.prev = null;
+        this.next = null;
 
         this.on_table = false;
 
         this.get_html = function () {
             var self = this;
-            $table = $('<div class="chip_0 my_chip">');
-            $table.append($('<img src="/static/images/value_0_'+this.left+'.png">'));
-            $table.append($('<img src="/static/images/value_0_'+this.right+'.png"></div>'));
-            $table.attr('id', 'chip_'+self.id);
+            $obj = $('<div class="chip_'+this.angle+' my_chip">');
+            $obj.append($('<img src="/static/images/value_'+this.angle+'_'+this.left+'.png">'));
+            $obj.append($('<img src="/static/images/value_'+this.angle+'_'+this.right+'.png"></div>'));
+            $obj.attr('id', 'chip_'+self.id);
 
-            $table.click(function () {
-                if (self.on_table == true)
-                    return
-                self.on_table = true;
-                var data = {
-                    chip_id: self.id
+            $obj.click(function () {
+                if (!my_turn) {
+                    // not my turn
+                    return;
                 }
-                $.ajax({
-                    url: '{% url game_step room.id %}',
-                    type: 'POST',
-                    dataType: 'json',
-                    data: data,
-                    success: function (data) {
-                    },
-                    error: function (r) {
-                        console.log(r);
+
+                if (self.on_table == true) {
+                    if (my_selected_chip) {
+                        if (self.next) {
+                            return;
+                        }
+
+                        if ((self.left != my_selected_chip.left) && (self.left != my_selected_chip.right)
+                                && (self.right != my_selected_chip.left) && (self.right != my_selected_chip.right)) {
+                            return;
+                        }
+
+                        table_selected_chip = self;
+                        process_turn();
                     }
-                });
+                } else {
+                    if (my_selected_chip) {
+                        $('#chip_'+my_selected_chip.id).removeClass('my_selected');
+                    }
+                    $('#chip_'+self.id).addClass('my_selected');
+                    my_selected_chip = self;
+                }
             });
 
-            return $table[0]
+            return $obj[0]
         }
 
         this.create_on_table = function () {
@@ -204,21 +227,56 @@
                 }
 
                 $(data.members).each(function (i, e) {
-                    $('#user'+i).text(e.username+' '+ e.chips_count);
+
+                    //$('#user'+i).text(e.username+' '+ );
+                    angle = 1;
+                    if (i == 2) {
+                        angle = 0;
+                    }
+                    step = 10;
+                    var container = $('#user'+i);
+                    for (var k=0;k<e.chips_count;k++) {
+                        var chip = HiddenChip(angle);
+                        container.append(chip.get_html());
+                    }
                 });
 
-                //var my_chips = $('#my_chips');
+                var my_chips = $('#my_chips');
                 for (var i in data['my_chips']) {
                     var chip = new Chip(data['my_chips'][i].id, data['my_chips'][i].left, data['my_chips'][i].right);
-                    my_chips.appendChild(chip.get_html());
+                    my_chips.append(chip.get_html());
                 }
-
-                //$('#my_chips').each(function (i, e) {
-                //    var chip = new Chip(e.id, e.left, e.right);
-                //    my_chips.appendChild(chip.get_html());
-                //});
             }
         });
+    }
+
+    function process_turn(){
+        // Process my turn
+        if ((my_selected_chip) && (table_selected_chip)) {
+            self.on_table = true;
+            var data = {
+                chip_id: my_selected_chip.id,
+                table_id: table_selected_chip.id
+            }
+            $.ajax({
+                url: '{% url game_step room.id %}',
+                type: 'POST',
+                dataType: 'json',
+                data: data,
+                success: function (data) {
+                    if (data == 'OK') {
+                        $('#chip_'+self.id).remove();
+                    } else {
+                        $('#chip_'+self.id).removeClass('my_selected');
+                    }
+                },
+                error: function (r) {
+                    console.log(r);
+                }
+            });
+
+        }
+        return
     }
 
     </script>
@@ -228,13 +286,15 @@
     <h1>{% trans "Game" %}: {{ room.pk }} <span id="status"></span></h1>
     <div class="gamemain">
             <div id="user2"></div>
-            <div class="span2" id="user1"></div>
-            <div class="span8" id="gamefield"></div>
-            <div class="span2" id="user3"></div>
-            <div id="bank" class="span2"></div>
-            <div id="my_chips" class="span8" ></div>
+            <div id="user1"></div>
+            <div id="gamefield"></div>
+            <div id="user3"></div>
+            <div id="bank"></div>
+            <div id="my_chips"></div>
 
-            <div class="span12"></div>
-            <div class="span12"></div>
+            <div id="chat">
+                <div id="chat_input"><form action="" onsubmit="send_chat_message()"><input type="text" id="chat_input_string"></form></div>
+            </div>
+
     </div>
 {% endblock %}

@@ -88,7 +88,24 @@ def join_to_room(request, room_id):
         return redirect(reverse('room_select'))
     if not room.is_closed and not room.is_finished:
         room.join_member(request.user)
-        return HttpResponse('Ok')
+        return redirect(reverse('room', args=[room.id]))
     else:
         return redirect(reverse('room_select'))
         
+
+@login_required
+def room(request, room_id):
+    try:
+        room = GameRoom.objects.get(id=room_id)
+    except GameRoom.DoesNotExist:
+        return redirect(reverse('room_select'))
+    
+    #get me as member
+    member = room.join_member(request.user)
+
+    data = {
+        'room': room,
+        'member': member,
+    }
+    return render_to_response("dominogame/room.html", data, context_instance=RequestContext(request))
+

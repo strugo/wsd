@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Room: {{ room }}</h1>
+<h2>ME: {{ member }}</h2>
+{% for chip in member.chips.all %}
+ {{ chip }}<br />
+{% endfor %}
+
+<h2>Members list</h2>
+{% for m in room.room_members.all %}
+ -- {{ m }}<br />
+{% endfor %}
+{% endblock %}
+

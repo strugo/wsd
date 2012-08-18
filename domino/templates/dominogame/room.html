@@ -16,6 +16,11 @@
 
 {% block extra_js %}
 <script type="text/javascript">
+
+    var start_x = 20;
+    var start_y = 20;
+    var chips = {};
+
     $(document).ready(
             function() {
                 load_game_status();
@@ -23,15 +28,37 @@
             });
 
     function load_game_status() {
-        $.post("{% url domino_load_game_status rook.pk %}", function(xml) {
-            if(xml['status'] == 1) {
+        $.post("{% url domino_load_game_status rook.pk %}", function(data) {
+            if(data['status'] == 1) {
                 $('#status').html('{% trans "started" %}');
             } else {
                 $('#status').html('{% trans "not started" %}');
             }
 
-            for each
+            for (var chip in data['chips']) {
+                draw_chip(data['chips'][chip]);
+            }
         });
+    }
+
+    function draw_chip(chip) {
+        var left = chip[0];
+        var right = chip[1];
+        var prev = chip[3];
+        var angle = 0;
+        var x = start_x;
+        var y = start_y;
+        if (left == right) {
+            angle = 1;
+        }
+
+        if (chips.length > 0) {
+            prev = chips[prev];
+            if (prev[1] == right) {
+                angle = 2;
+            }
+            if
+        }
     }
 </script>
 {% endblock %}

@@ -8,10 +8,12 @@ class GameChipInline(admin.TabularInline):
     extra = 0
     can_delete = False
     readonly_fields = (
+        'id',
         'left',
         'right',
     )
     fields = (
+        'id',
         'left',
         'right',
         'angle',

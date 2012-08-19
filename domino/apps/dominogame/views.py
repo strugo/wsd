@@ -131,10 +131,16 @@ def game_step(request, room_id):
         elif action == 'get_chip':
             member = room.get_member(request.user)
             random_chip = room.get_random_chip()
+            random_chip.used = True
+            random_chip.save()
             member.chips.add(random_chip)
             member.save()
+
+            chips_in_bank = room.room_chips.filter(used=False).count()
+
             extra = {
                 'status': 'ok',
+                'chips_in_bank': chips_in_bank,
             }
             return HttpResponse(random_chip.to_JSON(extra=extra))
 
@@ -180,9 +186,13 @@ def game_step(request, room_id):
                     else:
                         turn_user_id = None
 
+                    chips_in_bank = room.room_chips.filter(used=False).count()
+                    print chips_in_bank
+
                     extra = {
                         'action':'place_chip',
                         'turn_user_id': turn_user_id,
+                        'chips_in_bank': chips_in_bank,
                     }
                     msg_to_send = chip.to_JSON(extra=extra)
 

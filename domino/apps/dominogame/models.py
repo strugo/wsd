@@ -102,7 +102,7 @@ class GameRoom(models.Model):
         If there is no chips - return None
         '''
         try:
-            return self.room_chips.all().filter(used=False).order_by('?')[0]
+            return self.room_chips.filter(used=False).order_by('?')[0]
         except IndexError:
             return None
 

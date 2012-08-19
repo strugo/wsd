@@ -333,14 +333,14 @@
             action: 'get_chip',
         }
         success = function (data) {
-            console.log(data);
+            ROOM.chips_in_bank = data.chips_in_bank;
             var chip = new Chip(data.id, data.left, data.right, 1);
             $('#my_chips').append(chip.get_html());
         }
         send_message(data, success);
     }
     ROOM.check_bank = function ()  {
-        if (ROOM.chips_in_bank > 0 && my_turn && ROOM.is_active)
+        if (ROOM.chips_in_bank > 0 )
             $('#get_chip').removeAttr('disabled');
         else
             $('#get_chip').attr('disabled', true);
@@ -396,6 +396,7 @@
                 case ('place_chip'): {
                     place_new_chip(data.left, data.right, data.id, data.prev_id);
                     ROOM.turn_user_id = data.turn_user_id;
+                    ROOM.chips_in_bank = data.chips_in_bank;
                     ROOM.can_turn();
                     ROOM.check_bank();
                     $('.my_selected').removeClass('my_selected');

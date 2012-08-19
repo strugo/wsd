@@ -73,7 +73,7 @@
         var table_selected_chip = null;
 
         var start_x = 350;
-        var start_y = 330;
+        var start_y = 300;
 
         var users = {};
 
@@ -130,17 +130,31 @@
         this.left = left;
         this.right = right;
         this.angle = 0;
-        this.prev = null;
         this.next = null;
+        this.prev = null;
 
         this.on_table = false;
 
         this.get_html = function () {
             var self = this;
-            $obj = $('<div class="chip_'+this.angle+' my_chip">');
-            $obj.append($('<img src="/static/images/value_'+this.angle+'_'+this.left+'.png">'));
-            $obj.append($('<img src="/static/images/value_'+this.angle+'_'+this.right+'.png"></div>'));
-            $obj.attr('id', 'chip_'+self.id);
+            if (self.on_table) {
+                if ((self.angle == 0) || (self.angle == 1)) {
+                    $obj = $('<div class="chip_'+this.angle+'">');
+                    $obj.append($('<img src="/static/images/value_'+this.angle+'_'+this.left+'.png">'));
+                    $obj.append($('<img src="/static/images/value_'+this.angle+'_'+this.right+'.png"></div>'));
+                    $obj.attr('id', 'chip_'+self.id);
+                } else {
+                    $obj = $('<div class="chip_'+this.angle+'">');
+                    $obj.append($('<img src="/static/images/value_'+(this.angle-2)+'_'+this.right+'.png">'));
+                    $obj.append($('<img src="/static/images/value_'+(this.angle-2)+'_'+this.left+'.png"></div>'));
+                    $obj.attr('id', 'chip_'+self.id);
+                }
+            } else {
+                $obj = $('<div class="chip_'+this.angle+' my_chip">');
+                $obj.append($('<img src="/static/images/value_'+this.angle+'_'+this.left+'.png">'));
+                $obj.append($('<img src="/static/images/value_'+this.angle+'_'+this.right+'.png"></div>'));
+                $obj.attr('id', 'chip_'+self.id);
+            }
 
             $obj.click(function () {
                 if (!my_turn) {
@@ -285,6 +299,7 @@
                 var my_chips = $('#my_chips');
                 for (var i in data['my_chips']) {
                     var chip = new Chip(data['my_chips'][i].id, data['my_chips'][i].left, data['my_chips'][i].right);
+                    chip.angle = 1;
                     my_chips.append(chip.get_html());
                 }
             }
@@ -334,17 +349,82 @@
         return data;
     }
 
-    function place_new_chip(left, right, id, prev) {
-        if (!prev) {
+    function place_new_chip(left, right, id, prev_id) {
+        if (!prev_id) {
             // first chip
-            chip = Chip(id, left, right);
+            var chip = Chip(id, left, right);
             chip.angle = 1;
             chip.on_table = 1;
             $("#gamefield").append(chip.get_html());
             $("#chip_"+id).offset(count_offset(start_x, start_y));
+            table[id] = chip;
         } else {
-            var prev = $("#chip_"+prev);
-
+            var prev = table[prev_id];
+            var field_offset = $("#gamefield").offset();
+            console.log(prev);
+            if (!prev.next) {
+                var offset = $("#chip_"+prev_id).offset();
+                var angle = 0;
+                var dest = 0;
+                var chip = Chip(id, left, right);
+                if (left == right) {
+                    angle = 1;
+                }
+                if (prev.angle == 1) {
+                    if (prev.prev) {
+                        if (prev.prev.angle == 0) {
+                            angle = 2;
+                        }
+                    } else {
+                        angle = 0;
+                    }
+                }
+                if (angle == 2 ) {
+                    if (offset.right - field_offset.right < 50 ){
+                        // rotate chip
+                        if (table[prev_id].angle == 0) {
+                            chip.angle = angle;
+                            chip.on_table = true;
+                            $("#gamefield").append(chip.get_html());
+                            $("#chip_"+id).offset({ top: offset.top-70, right: offset.right});
+                        } else {
+                            /// rotate chip 180
+                            var chip = Chip(id, right, left);
+                            chip.angle = angle;
+                            chip.on_table = true;
+                            $("#gamefield").append(chip.get_html());
+                            $("#chip_"+id).offset({ top: offset.top-70, right: offset.right});
+                        }
+                    } else {
+                        chip.angle = angle;
+                        chip.on_table = true;
+                        $("#gamefield").append(chip.get_html());
+                        $("#chip_"+id).offset({ top: offset.top, left: offset.left-70});
+                    }
+                } else {
+                    if (offset.left - field_offset.left < 50 ){
+                        // rotate chip
+                        if (table[prev_id].angle == 0) {
+                            chip.angle = 1;
+                            $("#gamefield").append(chip.get_html());
+                            $("#chip_"+id).offset({ top: offset.top-70, left: offset.left});
+                        } else {
+                            /// rotate chip 180
+                            var chip = Chip(id, right, left);
+                            $("#gamefield").append(chip.get_html());
+                            $("#chip_"+id).offset(count_offset(offset.top, offset.left+70));
+                        }
+                    } else {
+                        chip.angle = angle;
+                        chip.on_table = true;
+                        prev.next = chip;
+                        chip.prev = prev;
+                    }
+                }
+                prev.next = chip;
+                chip.prev = prev;
+                table[id]=chip;
+            }
         }
     }
 

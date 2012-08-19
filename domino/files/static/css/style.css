@@ -495,13 +495,13 @@ table tr td {
     background-color: black;
     background-image: url(/static/images/arena.png);
     background-repeat: no-repeat;
+    overflow: auto;
 }
 
 .chip_0 {
     width: 70px;
     height: 35px;
-    background-image: url(/static/images/chip_0_0.png);
-    background-repeat: no-repeat;
+    background: url(/static/images/chip_0_0.png) no-repeat;
 }
 
 .chip_0 img {
@@ -514,8 +514,8 @@ table tr td {
 }
 
 .chip_1 {
-    width: 70px;
-    height: 35px;
+    width: 35px;
+    height: 70px;
     background-image: url(/static/images/chip_1_0.png);
     background-repeat: no-repeat;
 }

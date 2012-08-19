@@ -452,7 +452,7 @@
         if ((my_selected_chip) && (table_selected_chip)) {
             self.on_table = true;
             var data = {
-                action: process_turn,
+                action: 'process_turn',
                 chip_id: my_selected_chip.id,
                 table_id: table_selected_chip.id
             }
@@ -467,7 +467,7 @@
 
         } else if (my_selected_chip && ROOM.table_is_clear()) {
             var data = {
-                action: process_turn,
+                action: 'process_turn',
                 chip_id: my_selected_chip.id,
             }
             var success = function (data) {
@@ -479,6 +479,7 @@
                 }
             }
         }
+        console.log(data, success);
         send_message(data, success);
         return
     }

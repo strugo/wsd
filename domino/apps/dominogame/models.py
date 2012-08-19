@@ -224,34 +224,8 @@ class GameRoom(models.Model):
         return None
 
 
-    def get_tree_chips(self, first_chip=None):
-        if not first_chip:
-            try:
-                first_chip = self.room_chips \
-                    .filter(on_table=True, prev__isnull=True)[0]
-            except IndexError:
-                return []
-        tree = []
-        chip = first_chip
-        tree.append(chip)
-        while True:
-            chip = chip.next_chip.all()
-            if len(chip) == 0:
-                break
-            if len(chip) == 1:
-                chip = chip[0]
-                tree.append(chip)
-            elif len(chip) > 1:
-                list_chip = []
-                for c in chip:
-                    t = self.get_tree_chips(c)
-                    for c1 in t:
-                        list_chip.append(c1)
-                for l in list_chip:
-                    tree.append(l)
-                break
-
-        return tree
+    def get_tree_chips(self):
+        return self.room_chips.filter(on_table=True).order_by('dt_update')
 
 
     def get_turn_member(self):
@@ -353,6 +327,7 @@ class GameChip(models.Model):
     on_table = models.BooleanField(_(u'Chip on table'), default=False, db_index=True)
     is_border_mark = models.BooleanField(_(u'Is border mark'), default=False)
     is_last = models.BooleanField(_('Last chip on table'), default=False)
+    dt_update = models.DateTimeField(_('Updated at'), auto_now=True)
 
 
     class Meta:

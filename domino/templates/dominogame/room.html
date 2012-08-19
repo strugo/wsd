@@ -213,14 +213,41 @@
 
                 if (self.on_table == true) {
                     if (my_selected_chip) {
-                        if (self.next) {
-                            return;
-                        }
-
-                        if ((self.left != my_selected_chip.left) && (self.left != my_selected_chip.right)
-                                && (self.right != my_selected_chip.left) && (self.right != my_selected_chip.right)) {
-                            console.log('wrong chip');
-                            return;
+                        console.log(self.left, self.right, self.id);
+                        var item = table[self.id];
+                        console.log(item.prev);
+                        if (item.next)  {
+                            if (item.prev) return;
+                            // from another side
+                            var number = 0;
+                            if (item.next.left == item.left) {
+                                number = item.right;
+                            } else {
+                                number = item.left;
+                            }
+                            if ((my_selected_chip.left != number) && (my_selected_chip.right != number)) {
+                                console.log('wrong chip');
+                                return
+                            }
+                        } else {
+                            var number = 0;
+                            if (item.prev) {
+                                if (item.prev.left == item.left) {
+                                    number = item.right;
+                                } else {
+                                    number = item.left;
+                                }
+                                if ((my_selected_chip.left != number) && (my_selected_chip.right != number)) {
+                                    console.log('wrong chip 2');
+                                    return
+                                }
+                            } else {
+                                    if ((item.left != my_selected_chip.left) && (item.left != my_selected_chip.right)
+                                            && (self.right != my_selected_chip.left) && (self.right != my_selected_chip.right)) {
+                                        console.log('wrong chip 2');
+                                        return;
+                                    }
+                            }
                         }
 
                         table_selected_chip = self;
@@ -421,7 +448,7 @@
                         step = 10;
                         var container = $('#user'+n);
                         for (var k=0;k<e.chips_count;k++) {
-                            var chip = HiddenChip(angle);
+                            var chip = new HiddenChip(angle);
                             container.append(chip.get_html());
                         }
                         n++;
@@ -541,7 +568,7 @@
                         angle = 2;
                     }
                 }
-                chip = Chip(id, left, right, angle);
+                chip = new Chip(id, left, right, angle);
                 chip.on_table = true;
                 chip.direction = direction;
                 $("#gamefield").append(chip.get_html());
@@ -553,7 +580,11 @@
                     }
                 }
                 if (direction == 1) {
-                    $("#chip_"+id).offset({ top: offset.top-70, left: offset.left});
+                    if (prev.direction == 0) {
+                        $("#chip_"+id).offset({ top: offset.top-70, left: offset.left});
+                    } else {
+                        $("#chip_"+id).offset({ top: offset.top-70, left: offset.left+35});
+                    }
                 }
                 if (direction == 2) {
                     if (prev.direction == 1) {
@@ -610,7 +641,7 @@
                         angle = 2;
                     }
                 }
-                chip = Chip(id, left, right, angle);
+                chip = new Chip(id, left, right, angle);
                 chip.on_table = true;
                 chip.direction = direction;
                 $("#gamefield").append(chip.get_html());
@@ -660,7 +691,7 @@
         var id = users[user_id]
         var angle = 1
         if (id == 2) angle=0
-        var chip = HiddenChip(angle);
+        var chip = new HiddenChip(angle);
         $('#user'+id).append(chip.get_html());
     }
 

@@ -3,14 +3,10 @@
 {% load bootstrap %}
 {% block extra_title %} - {% trans "Registraion" %}{% endblock %}
 {% block account_content %}
-    <div class="page-header">
-        <h1>{% trans "Registration" %}</h1>
-    </div>
-    <div class="well">
-        <form method="POST">
-            {% csrf_token %}
-            {{ form|bootstrap }}
-            <input type="submit" class="btn btn-primary" value="{% trans "Register" %}" />
-        </form>
-    </div>
+    <h1>{% trans "Registration" %}</h1>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" class="btn btn-primary" value="{% trans "Register" %}" />
+    </form>
 {% endblock %}

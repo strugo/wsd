@@ -8,6 +8,6 @@ urlpatterns = patterns('account.views',
     url(r'^register/$', 'registration_page', name="registration_page"),
     url(r'^restore/$', 'restore_password', name="password_restore_page"),
     url(r'^restore/(?P<uuid>(\w|-)+)/$', 'reset_password_page', name="reset_password_page"),
-    url(r'^$', 'profile_settings', name="main_page"),
+    url(r'^settings/$', 'profile_settings', name="profile_settings"),
 )
   

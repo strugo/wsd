@@ -3,18 +3,12 @@
 {% load bootstrap %}
 {% block extra_title %} - {% trans "Login" %}{% endblock %}
 {% block account_content %}
-    <div class="page-header">
-        <h1>{% trans "Login" %}</h1>
-    </div>
-    <div class="span4">
-        <div class="well" style="height: 220px;">
-            <form method="POST">
-                {% csrf_token %}
-                {{ form|bootstrap }}
-                <p><input type="submit" class="btn btn-primary" value="{% trans "Login" %}" />
-                <a class="btn btn-danger" href="{% url password_restore_page %}">{% trans "Restore password" %}</a>&nbsp;<br>
-                </p>
-            </form>
-        </div>
-    </div>
+    <h1>{% trans "Login" %}</h1>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <p><input type="submit" class="btn btn-primary" value="{% trans "Login" %}" />
+        <a href="{% url password_restore_page %}">{% trans "Restore password" %}</a>&nbsp;<br>
+        </p>
+    </form>
 {% endblock %}

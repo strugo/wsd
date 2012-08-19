@@ -215,15 +215,23 @@
                     if (my_selected_chip) {
                         console.log(self.left, self.right, self.id);
                         var item = table[self.id];
-                        console.log(item.prev);
+                        //var item = self;
+
+                        console.log(item.prev, item.next);
                         if (item.next)  {
-                            if (item.prev) return;
+                            console.log('here');
+                            if (item.prev) {
+                                console.log('here');
+                                return
+                            };
                             // from another side
                             var number = 0;
-                            if (item.next.left == item.left) {
-                                number = item.right;
-                            } else {
+                            if ((item.next.left == item.right) || (item.next.right == item.right)){
                                 number = item.left;
+                            } else{
+                                if ((item.next.left == item.left) || (item.next.right == item.left)) {
+                                    number = item.right;
+                                }
                             }
                             if ((my_selected_chip.left != number) && (my_selected_chip.right != number)) {
                                 console.log('wrong chip');
@@ -232,19 +240,21 @@
                         } else {
                             var number = 0;
                             if (item.prev) {
-                                if (item.prev.left == item.left) {
-                                    number = item.right;
-                                } else {
+                                if ((item.prev.left == item.right) || (item.prev.right == item.right)){
                                     number = item.left;
+                                } else{
+                                    if ((item.prev.left == item.left) || (item.prev.right == item.left)) {
+                                        number = item.right;
+                                    }
                                 }
                                 if ((my_selected_chip.left != number) && (my_selected_chip.right != number)) {
-                                    console.log('wrong chip 2');
+                                    console.log('wrong chip 2 1');
                                     return
                                 }
                             } else {
                                     if ((item.left != my_selected_chip.left) && (item.left != my_selected_chip.right)
                                             && (self.right != my_selected_chip.left) && (self.right != my_selected_chip.right)) {
-                                        console.log('wrong chip 2');
+                                        console.log('wrong chip 2 2');
                                         return;
                                     }
                             }
@@ -525,6 +535,7 @@
             chip.on_table = true;
             $("#gamefield").append(chip.get_html());
             $("#chip_"+id).offset(count_offset(start_x, start_y));
+
             table[id] = {};
             table[id].left = left;
             table[id].right = right;
@@ -533,10 +544,14 @@
             table[id].prev = null;
             table[id].direction = 0;
 
+
         } else {
             var prev = table[prev_id];
+            //var prev = $('#chip_'+prev_id);
             var field_offset = $("#gamefield").offset();
             var angle = 0;
+            console.log(prev);
+            if (!prev) return;
             if (!prev.next) {
                 var direction = prev.direction;
                 var offset = $("#chip_"+prev_id).offset();
@@ -571,6 +586,8 @@
                 chip = new Chip(id, left, right, angle);
                 chip.on_table = true;
                 chip.direction = direction;
+                chip.prev = prev;
+                chip.next = null;
                 $("#gamefield").append(chip.get_html());
                 if (direction == 0) {
                     if (prev.direction == 1) {
@@ -593,6 +610,7 @@
                         $("#chip_"+id).offset({ top: offset.top, left: offset.left+70});
                     }
                 }
+
                 table[id] = {};
                 table[id].left = left;
                 table[id].right = right;
@@ -642,10 +660,38 @@
                         angle = 2;
                     }
                 }
+                if ((direction == 0) && (prev.direction == 1)) {
+                    angle = 2;
+                    if (prev.angle == 0) {
+                        if (prev.left == left) {
+                            angle = 0;
+                        }
+                    } else {
+                        if (prev.right == left) {
+                            angle = 0;
+                        }
+                    }
+                }
+                if (direction == 1) {
+                    angle = 2;
+                    if (prev.angle == 0) {
+                        if (prev.left == left) {
+                            angle = 0;
+                        }
+                    } else {
+                        if (prev.right == left) {
+                            angle = 0;
+                        }
+                    }
+                }
+
+
                 console.log(angle, right, left);
                 chip = new Chip(id, left, right, angle);
                 chip.on_table = true;
                 chip.direction = direction;
+                chip.next = prev;
+                chip.prev = null;
                 $("#gamefield").append(chip.get_html());
                 if (direction == 0) {
                     if (prev.direction == 1) {
@@ -669,6 +715,7 @@
                         $("#chip_"+id).offset({ top: offset.top, left: offset.left + 70});
                     }
                 }
+
                 table[id] = {};
                 table[id].left = left;
                 table[id].right = right;
@@ -677,6 +724,7 @@
                 table[id].direction = direction;
                 table[prev_id].next = table[id];
                 table[id].next = table[prev_id];
+
             }
 
         }

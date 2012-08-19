@@ -121,15 +121,13 @@ def game_step(request, room_id):
     except GameRoom.DoesNotExist:
         pass
     else:
-        if not room.get_turn_member().user == request.user:
+        turn_member = room.get_turn_member()
+        if not turn_member.user == request.user:
             return HttpResponse("fail")
 
         action = request.POST.get('action')
         if action == 'game_start':
-            extra = {
-                'action':'game_start',
-            }
-            msg_to_send = room.to_JSON(user=request.user, extra=extra)
+            room.game_start()
         else:
             try:
                 chip_id = int(request.POST.get('chip_id'))
@@ -142,23 +140,34 @@ def game_step(request, room_id):
                 except IndexError:
                     pass
                 else:
-                    if not room.can_next(chip):
-                        return HttpResponse("fail")
+                    #if not room.can_next(chip):
+                        #return HttpResponse("fail")
+
+                    try:
+                        table_id = int(request.POST.get('table_id'))
+                        chip_prev = room.room_chips.filter(id=table_id)[0]
+                    except (ValueError, TypeError, IndexError):
+                        pass
+                    else:
+                        chip.prev = chip_prev
 
                     chip.on_table = True
                     chip.is_border_mark = True
                     chip.save()
 
-                    room_json = room.to_JSON()
-                    msg_to_send = json.dumps({
-                        'room': room_json,
-                        'chip': {
-                            'chip_id': chip.id,
-                            'left': chip.left,
-                            'right': chip.right,
-                        },
-                    })
+                    turn_member = room.get_turn_member()
+                    if turn_member:
+                        turn_user_id = turn_member.user.id
+                    else:
+                        turn_user_id = None
 
-        room.send_message(msg_to_send)
-    return HttpResponse("ok")
+                    extra = {
+                        'action':'place_chip',
+                        'turn_user_id': turn_user_id,
+                    }
+                    msg_to_send = chip.to_JSON(extra=extra)
+
+            room.send_message(msg_to_send)
+        print ''
+    return HttpResponse(json.dumps({'status': 'ok'}))
 

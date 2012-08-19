@@ -17,6 +17,8 @@ class GameChipInline(admin.TabularInline):
         'angle',
         'prev',
         'used',
+        'on_table',
+        'is_border_mark',
     )
 
 

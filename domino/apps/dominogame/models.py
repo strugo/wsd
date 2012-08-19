@@ -137,16 +137,28 @@ class GameRoom(models.Model):
             return None
 
 
+    def get_all_members(self):
+        return self.room_members.all().order_by('id')
+
+
     def to_JSON(self, user=None, extra={}):
         members = []
-        for m in self.room_members.all():
+        for m in self.get_all_members():
             members.append({
                 'username': m.user.username,
                 'id': m.user.pk,
                 'chips_count': m.chips.count(),
             })
 
-        log = self.get_tree_chips()
+        log = []
+        tree = self.get_tree_chips()
+        for c in tree:
+            log.append({
+                'id': c.id,
+                'left': c.left,
+                'right': c.right,
+            })
+
 
         my_chips = []
         if user:
@@ -185,6 +197,9 @@ class GameRoom(models.Model):
 
     def can_next(self, chip):
         if self.table_is_clear(): #Table is clear
+            turn_chip = self.get_turn_chip()
+            print turn_chip
+            print chip
             return self.get_turn_chip() == chip
 
 
@@ -218,17 +233,69 @@ class GameRoom(models.Model):
 
 
     def get_turn_member(self):
+        print '-'*40
         if self.room_members.count() < 2:
             return None
 
         if self.table_is_clear(): #Table is clear
+            print 'Table is clear'
             chip = self.get_turn_chip()
             if chip:
                 return chip.users_chips.get()
             else:
                 return None
         else:
-            return self.get_tree_chips()[-1].users_chips.get()
+            print 'Table with chips'
+            print self.get_tree_chips()
+            last_turn_member = self.get_tree_chips()[-1].users_chips.get()
+            print 'last_turn_member %s' % last_turn_member
+            members = self.get_all_members()
+            i = 1
+            for m in members:
+                if m == last_turn_member:
+                    print 'Find %s' % m
+                    if i == len(members):
+                        print 'I == len(members)'
+                        to_return = members[0]
+                        print 'to_return %s' % to_return
+                        return to_return
+                    else:
+                        print 'I <> len(members)'
+                        to_return = members[i]
+                        print 'to_return %s' % to_return
+                        return to_return
+                i+=1
+
+
+    def game_start(self):
+        extra = {
+            'action':'game_start',
+        }
+        #msg_to_send = self.to_JSON(user=request.user, extra=extra)
+        #self.send_message(msg_to_send)
+
+        chip = self.get_turn_chip()
+        chip.on_table = True
+        chip.is_border_mark = True
+        chip.save()
+
+        turn_member = self.get_turn_member()
+        if turn_member:
+            turn_user_id = turn_member.user.id
+        else:
+            turn_user_id = None
+
+        data = {
+            'action':'delete_chip',
+            'chip_id':chip.id,
+        }
+        self.send_message(json.dumps(data))
+
+        extra = {
+            'action':'place_chip',
+            'turn_user_id': turn_user_id,
+        }
+        self.send_message(chip.to_JSON(extra=extra))
 
 
     def send_message(self, msg):
@@ -264,6 +331,23 @@ class GameChip(models.Model):
 
     def __unicode__(self):
         return '%i|%i' % (self.left, self.right,)
+
+    def to_JSON(self, extra={}):
+        if self.prev:
+            prev_id = self.prev.id
+        else:
+            prev_id = None
+
+        data = {
+            'chip_id' : self.id,
+            'left' : self.left,
+            'right' : self.right,
+            'angle' : self.angle,
+            'prev_id': prev_id,
+            'is_border_mark': self.is_border_mark,
+        }
+        data.update(extra)
+        return json.dumps(data)
 
 
 class GameMember(models.Model):

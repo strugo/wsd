@@ -220,6 +220,12 @@
                 }
             });
 
+            $obj.dblclick(function () {
+                if (ROOM.table_is_clear()){
+                    process_turn();
+                }
+            });
+
             return $obj[0]
         }
 
@@ -269,6 +275,12 @@
             }
         });
     }
+    ROOM.table_is_clear = function () {
+        if (ROOM.log.length == 0)
+            return true;
+        else
+            return false
+    }
 
 
 
@@ -313,9 +325,19 @@
                     break;
                 }
                 case ('delete_chip'): {
+                    $('#chip_'+data.chip_id).remove();
                     break;
                 }
                 case ('place_chip'): {
+                    //#FIX ME: Угол поворота приходит с сервера,
+                    //но пока забит статично
+                    var chip = new Chip(data.chip_id, data.left, data.right, 2);
+                    chip.create_on_table()
+                    ROOM.turn_user_id = data.turn_user_id;
+                    ROOM.can_turn();
+                    $('.my_selected').removeClass('my_selected');
+                    my_selected_chip = null;
+
                     break;
                 }
                 case ('chat_message'): {
@@ -401,7 +423,8 @@
                 dataType: 'json',
                 data: data,
                 success: function (data) {
-                    if (data == 'OK') {
+                    console.log(data);
+                    if (data.status == 'ok') {
                         $('#chip_'+self.id).remove();
                     } else {
                         $('#chip_'+self.id).removeClass('my_selected');
@@ -412,6 +435,27 @@
                 }
             });
 
+        } else if (my_selected_chip && ROOM.table_is_clear()) {
+            var data = {
+                chip_id: my_selected_chip.id,
+            }
+            $.ajax({
+                url: '{% url game_step room.id %}',
+                type: 'POST',
+                dataType: 'json',
+                data: data,
+                success: function (data) {
+                    console.log(data);
+                    if (data == 'ok') {
+                        $('#chip_'+self.id).remove();
+                    } else {
+                        $('#chip_'+self.id).removeClass('my_selected');
+                    }
+                },
+                error: function (r) {
+                    console.log(r);
+                }
+            });
         }
         return
     }

@@ -495,7 +495,8 @@ table tr td {
     background-color: black;
     background-image: url(/static/images/arena.png);
     background-repeat: no-repeat;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: auto;
 }
 
 .chip_0 {

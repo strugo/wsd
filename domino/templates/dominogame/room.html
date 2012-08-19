@@ -574,7 +574,7 @@
                 $("#gamefield").append(chip.get_html());
                 if (direction == 0) {
                     if (prev.direction == 1) {
-                        $("#chip_"+id).offset({ top: offset.top - 35, left: offset.left});
+                        $("#chip_"+id).offset({ top: offset.top - 35, left: offset.left - 35});
                     } else {
                         $("#chip_"+id).offset({ top: offset.top, left: offset.left-70});
                     }
@@ -603,7 +603,7 @@
                 table[id].prev = table[prev_id];
             } else {
                 console.log('Rear');
-                var angle = 2;
+                var angle = 0;
                 var direction = prev.direction;
                 if ((prev.direction == 0) && (prev.next)) {
                     if (prev.next.direction == 0) {
@@ -634,12 +634,12 @@
                 }
                 console.log(prev.angle, prev.left, prev.right);
                 if (prev.angle == 0) {
-                    if (prev.right == right) {
-                        angle = 0;
+                    if (prev.left == left) {
+                        angle = 2;
                     }
                 } else {
-                    if (prev.left == right) {
-                        angle = 0;
+                    if (prev.right == left) {
+                        angle = 2;
                     }
                 }
                 console.log(angle, right, left);

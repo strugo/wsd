@@ -148,7 +148,7 @@ def profile_settings(request):
                     user.email = form1.cleaned_data.get('email','')
                     user.save()
                 messages.success(request, u"Saved.")
-                return redirect("settings_page")
+                return redirect("profile_settings")
             else:
                 messages.error(request, u"Check errors")
         elif action == 'password':
@@ -159,7 +159,7 @@ def profile_settings(request):
                 user.save()
                 logout(request)
                 messages.success(request, u"Saved. Re-login please.")
-                return redirect("home_page")
+                return redirect("main_page")
             else:
                 messages.error(request, u"Check errors")
 

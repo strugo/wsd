@@ -152,6 +152,8 @@ class GameRoom(models.Model):
 
         log = []
         tree = self.get_tree_chips()
+        for t in tree:
+            print t.dt_update
         for c in tree:
             log.append({
                 'id': c.id,
@@ -159,6 +161,8 @@ class GameRoom(models.Model):
                 'right': c.right,
                 'prev_id': c.prev_id,
             })
+        for l in log:
+            print l
 
 
         my_chips = []
@@ -263,6 +267,7 @@ class GameRoom(models.Model):
             c.is_last = False
             c.save()
         chip.is_last = True
+        chip.dt_update = datetime.datetime.now()
         chip.save()
 
 
@@ -327,7 +332,7 @@ class GameChip(models.Model):
     on_table = models.BooleanField(_(u'Chip on table'), default=False, db_index=True)
     is_border_mark = models.BooleanField(_(u'Is border mark'), default=False)
     is_last = models.BooleanField(_('Last chip on table'), default=False)
-    dt_update = models.DateTimeField(_('Updated at'), auto_now=True)
+    dt_update = models.DateTimeField(_('Updated at'), default=None, blank=True, null=True)
 
 
     class Meta:

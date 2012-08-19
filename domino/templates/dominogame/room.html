@@ -603,7 +603,7 @@
                 table[id].prev = table[prev_id];
             } else {
                 console.log('Rear');
-                var angle = 0;
+                var angle = 2;
                 var direction = prev.direction;
                 if ((prev.direction == 0) && (prev.next)) {
                     if (prev.next.direction == 0) {
@@ -632,15 +632,17 @@
                         direction = 1;
                     }
                 }
+                console.log(prev.angle, prev.left, prev.right);
                 if (prev.angle == 0) {
                     if (prev.right == right) {
-                        angle = 2;
+                        angle = 0;
                     }
                 } else {
                     if (prev.left == right) {
-                        angle = 2;
+                        angle = 0;
                     }
                 }
+                console.log(angle, right, left);
                 chip = new Chip(id, left, right, angle);
                 chip.on_table = true;
                 chip.direction = direction;

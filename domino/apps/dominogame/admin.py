@@ -19,6 +19,7 @@ class GameChipInline(admin.TabularInline):
         'used',
         'on_table',
         'is_border_mark',
+        'is_last',
     )
 
 

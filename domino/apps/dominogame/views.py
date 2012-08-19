@@ -172,6 +172,8 @@ def game_step(request, room_id):
                     chip.is_border_mark = True
                     chip.save()
 
+                    room.set_last(chip)
+
                     turn_member = room.get_turn_member()
                     if turn_member:
                         turn_user_id = turn_member.user.id

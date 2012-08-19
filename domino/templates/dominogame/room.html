@@ -704,13 +704,12 @@
 {% block content %}
     <h1>{% trans "Game" %}: {{ room.pk }} <span id="status"></span></h1>
     <button id="start_button" disabled onclick="ROOM.start_game()">Start</button>
-    <button id="get_chip" disabled onclick="ROOM.get_chip()">Get chip</button>
     <div id="gamemain">
             <div id="user2"><div id="username_2"></div></div>
             <div id="user1"><div id="username_1"></div></div>
             <div id="gamefield"></div>
             <div id="user3"><div id="username_3"></div></div>
-            <div id="bank"></div>
+            <div id="bank"><button id="get_chip" disabled onclick="ROOM.get_chip()">Get chip</button></div>
             <div id="my_chips"><div id="username_me"></div></div>
 
             <div id="chat">

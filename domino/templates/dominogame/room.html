@@ -586,7 +586,11 @@
                     }
                 }
                 if (direction == 1) {
-                    $("#chip_"+id).offset({ top: offset.top-70, left: offset.left});
+                    if (prev.direction == 0) {
+                        $("#chip_"+id).offset({ top: offset.top-70, left: offset.left});
+                    } else {
+                        $("#chip_"+id).offset({ top: offset.top-70, left: offset.left+35});
+                    }
                 }
                 if (direction == 2) {
                     if (prev.direction == 1) {

@@ -479,8 +479,8 @@ table tr td {
 
 #bank {
     position: absolute;
-    right: 10px;
-    top: 560px;
+    right: 40px;
+    top: 460px;
     height: 100px;
 }
 
@@ -577,6 +577,15 @@ table tr td {
     width: 70px;
     height: 35px;
     margin: 3px 0;
+}
+
+#get_chip {
+    float: left;
+    background-image: url(/static/images/chip_back_0.png);
+    background-repeat: no-repeat;
+    width: 35px;
+    height: 70px;
+    margin: 0 3px;
 }
 
 #chat {

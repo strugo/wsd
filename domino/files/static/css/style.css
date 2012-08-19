@@ -96,7 +96,7 @@ hr {
 
 #header {
     margin-top: 20px;
-    height: 110px;
+    height: 40px;
     width: 900px;
     vertical-align: middle;
     z-index: 10;
@@ -389,8 +389,8 @@ span.align-right {
 }
 
 #content p {
-    background-color: #303030;
-    padding: 15px;
+    background-color: inherit;
+    padding: 5px;
 }
 
 .text {

@@ -265,18 +265,31 @@ class GameRoom(models.Model):
             else:
                 return None
         else:
-            last_turn_member = self.get_tree_chips()[-1].users_chips.get()
-            members = self.get_all_members()
-            i = 1
-            for m in members:
-                if m == last_turn_member:
-                    if i == len(members):
-                        to_return = members[0]
-                        return to_return
-                    else:
-                        to_return = members[i]
-                        return to_return
-                i+=1
+            try:
+                last_chip = self.room_chips.filter(is_last=True)[0]
+            except IndexError:
+                return None
+            else:
+                last_turn_member = last_chip.users_chips.get()
+                members = self.get_all_members()
+                i = 1
+                for m in members:
+                    if m == last_turn_member:
+                        if i == len(members):
+                            to_return = members[0]
+                            return to_return
+                        else:
+                            to_return = members[i]
+                            return to_return
+                    i+=1
+
+
+    def set_last(self, chip):
+        for c in self.room_chips.filter(is_last=True):
+            c.is_last = False
+            c.save()
+        chip.is_last = True
+        chip.save()
 
 
     def game_start(self):
@@ -292,6 +305,8 @@ class GameRoom(models.Model):
         chip.on_table = True
         chip.is_border_mark = True
         chip.save()
+
+        self.set_last(chip)
 
         turn_member = self.get_turn_member()
         if turn_member:
@@ -337,6 +352,7 @@ class GameChip(models.Model):
     used = models.BooleanField(_(u'Used chip'), default=False, db_index=True)
     on_table = models.BooleanField(_(u'Chip on table'), default=False, db_index=True)
     is_border_mark = models.BooleanField(_(u'Is border mark'), default=False)
+    is_last = models.BooleanField(_('Last chip on table'), default=False)
 
 
     class Meta:

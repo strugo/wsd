@@ -325,14 +325,11 @@
                     break;
                 }
                 case ('delete_chip'): {
-                    $('#chip_'+data.chip_id).remove();
+                    delete_chip(data.chip_id);
                     break;
                 }
                 case ('place_chip'): {
-                    //#FIX ME: Угол поворота приходит с сервера,
-                    //но пока забит статично
-                    var chip = new Chip(data.chip_id, data.left, data.right, 2);
-                    chip.create_on_table()
+                    place_new_chip(data.left, data.right, data.id, data.prev_id);
                     ROOM.turn_user_id = data.turn_user_id;
                     ROOM.can_turn();
                     $('.my_selected').removeClass('my_selected');
@@ -425,9 +422,9 @@
                 success: function (data) {
                     console.log(data);
                     if (data.status == 'ok') {
-                        $('#chip_'+self.id).remove();
+                        $('#chip_'+my_selected_chip.id).remove();
                     } else {
-                        $('#chip_'+self.id).removeClass('my_selected');
+                        $('#chip_'+my_selected_chip.id).removeClass('my_selected');
                     }
                 },
                 error: function (r) {

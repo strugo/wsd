@@ -339,12 +339,10 @@ class GameChip(models.Model):
             prev_id = None
 
         data = {
-            'chip_id' : self.id,
+            'id' : self.id,
             'left' : self.left,
             'right' : self.right,
-            'angle' : self.angle,
             'prev_id': prev_id,
-            'is_border_mark': self.is_border_mark,
         }
         data.update(extra)
         return json.dumps(data)

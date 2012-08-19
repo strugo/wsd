@@ -119,10 +119,10 @@ def game_step(request, room_id):
     try:
         room = GameRoom.objects.get(id=room_id)
     except GameRoom.DoesNotExist:
-        pass
+        raise Http404()
     else:
         turn_member = room.get_turn_member()
-        if not turn_member.user == request.user:
+        if room.is_active and not turn_member.user == request.user:
             return HttpResponse("fail")
 
         action = request.POST.get('action')
@@ -137,7 +137,7 @@ def game_step(request, room_id):
                 'status': 'ok',
             }
             return HttpResponse(random_chip.to_JSON(extra=extra))
-            
+
         elif action == 'process_turn':
             try:
                 chip_id = int(request.POST.get('chip_id'))
@@ -150,16 +150,23 @@ def game_step(request, room_id):
                 except IndexError:
                     pass
                 else:
-                    #if not room.can_next(chip):
-                        #return HttpResponse("fail")
-
                     try:
                         table_id = int(request.POST.get('table_id'))
                         chip_prev = room.room_chips.filter(id=table_id)[0]
                     except (ValueError, TypeError, IndexError):
                         pass
                     else:
+                        if not chip_prev.is_border_mark:
+                            return HttpResponse("fail")
                         chip.prev = chip_prev
+
+
+                    if not room.can_next(chip):
+                        return HttpResponse("fail")
+
+                    if chip_prev and len(room.get_tree_chips()) > 2:
+                        chip_prev.is_border_mark = False
+                        chip_prev.save()
 
                     chip.on_table = True
                     chip.is_border_mark = True
@@ -178,7 +185,7 @@ def game_step(request, room_id):
                     msg_to_send = chip.to_JSON(extra=extra)
 
             room.send_message(msg_to_send)
-        print ''
+
     return HttpResponse(json.dumps({'status': 'ok'}))
 
 

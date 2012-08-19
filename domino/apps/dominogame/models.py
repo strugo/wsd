@@ -203,9 +203,13 @@ class GameRoom(models.Model):
     def can_next(self, chip):
         if self.table_is_clear(): #Table is clear
             turn_chip = self.get_turn_chip()
-            print turn_chip
-            print chip
             return self.get_turn_chip() == chip
+        else:
+            if not chip.prev:
+                return False
+            prev = chip.prev
+            return chip.left in (prev.left, prev.right) or \
+                chip.right in (prev.left, prev.right)
 
 
     def get_turn_chip(self):
@@ -220,20 +224,33 @@ class GameRoom(models.Model):
         return None
 
 
-    def get_tree_chips(self):
-        try:
-            first_chip = self.room_chips \
-                .filter(on_table=True, prev__isnull=True)[0]
-        except IndexError:
-            return []
+    def get_tree_chips(self, first_chip=None):
+        if not first_chip:
+            try:
+                first_chip = self.room_chips \
+                    .filter(on_table=True, prev__isnull=True)[0]
+            except IndexError:
+                return []
         tree = []
         chip = first_chip
+        tree.append(chip)
         while True:
-            tree.append(chip)
-            try:
-                chip = chip.next_chip.get()
-            except GameChip.DoesNotExist:
+            chip = chip.next_chip.all()
+            if len(chip) == 0:
                 break
+            if len(chip) == 1:
+                chip = chip[0]
+                tree.append(chip)
+            elif len(chip) > 1:
+                list_chip = []
+                for c in chip:
+                    t = self.get_tree_chips(c)
+                    for c1 in t:
+                        list_chip.append(c1)
+                for l in list_chip:
+                    tree.append(l)
+                break
+
         return tree
 
 
@@ -294,6 +311,10 @@ class GameRoom(models.Model):
         }
         self.send_message(chip.to_JSON(extra=extra))
         self.save()
+
+
+    def can_continue_game(self):
+        pass
 
 
     def send_message(self, msg):

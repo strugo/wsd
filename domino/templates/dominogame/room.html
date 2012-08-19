@@ -205,7 +205,7 @@
             }
 
             $obj.click(function () {
-                console.log('chip click');
+                console.log('chip click', self, self.on_table, self.id);
                 if (!my_turn) {
                     // not my turn
                     return;
@@ -233,12 +233,6 @@
                     }
                     $('#chip_'+self.id).addClass('my_selected');
                     my_selected_chip = self;
-                }
-            });
-
-            $obj.dblclick(function () {
-                if (ROOM.table_is_clear()){
-                    process_turn();
                 }
             });
 
@@ -309,7 +303,7 @@
         send_message(data, success);
     }
     ROOM.check_bank = function ()  {
-        if (ROOM.chips_in_bank > 0)
+        if (ROOM.chips_in_bank > 0 && my_turn && ROOM.is_active)
             $('#get_chip').removeAttr('disabled');
         else
             $('#get_chip').attr('disabled', true);
@@ -500,7 +494,7 @@
     function place_new_chip(left, right, id, prev_id) {
         if (!prev_id) {
             // first chip
-            var chip = Chip(id, left, right, 0);
+            var chip = new Chip(id, left, right, 0);
             chip.on_table = true;
             $("#gamefield").append(chip.get_html());
             $("#chip_"+id).offset(count_offset(start_x, start_y));

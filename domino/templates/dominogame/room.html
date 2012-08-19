@@ -213,14 +213,41 @@
 
                 if (self.on_table == true) {
                     if (my_selected_chip) {
-                        if (self.next) {
-                            return;
-                        }
-
-                        if ((self.left != my_selected_chip.left) && (self.left != my_selected_chip.right)
-                                && (self.right != my_selected_chip.left) && (self.right != my_selected_chip.right)) {
-                            console.log('wrong chip');
-                            return;
+                        console.log(self.left, self.right, self.id);
+                        var item = table[self.id];
+                        console.log(item.prev);
+                        if (item.next)  {
+                            if (item.prev) return;
+                            // from another side
+                            var number = 0;
+                            if (item.next.left == item.left) {
+                                number = item.right;
+                            } else {
+                                number = item.left;
+                            }
+                            if ((my_selected_chip.left != number) && (my_selected_chip.right != number)) {
+                                console.log('wrong chip');
+                                return
+                            }
+                        } else {
+                            var number = 0;
+                            if (item.prev) {
+                                if (item.prev.left == item.left) {
+                                    number = item.right;
+                                } else {
+                                    number = item.left;
+                                }
+                                if ((my_selected_chip.left != number) && (my_selected_chip.right != number)) {
+                                    console.log('wrong chip 2');
+                                    return
+                                }
+                            } else {
+                                    if ((item.left != my_selected_chip.left) && (item.left != my_selected_chip.right)
+                                            && (self.right != my_selected_chip.left) && (self.right != my_selected_chip.right)) {
+                                        console.log('wrong chip 2');
+                                        return;
+                                    }
+                            }
                         }
 
                         table_selected_chip = self;

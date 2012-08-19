@@ -10,8 +10,6 @@ from django.core.urlresolvers import reverse
 
 from dominogame.models import GameRoom, GameMember
 
-import stomp
-
 
 def load_game_status(request, room_id):
     '''
@@ -55,13 +53,7 @@ def game_comet_chanel(request):
     5. End game
     6. Disconnect user
     '''
-    conn = stomp.Connection()
-    conn.start()
-    conn.connect()
-    conn.subscribe(destination='/%s' % room.comet_id, ack='auto')
-
-    msg_to_send = room.to_JSON(request.user)
-    conn.send(msg_to_send, destination='/%s' % room.comet_id)
+    pass
 
 
 def get_new_chip(request):
@@ -129,32 +121,44 @@ def game_step(request, room_id):
     except GameRoom.DoesNotExist:
         pass
     else:
-        conn = stomp.Connection()
-        conn.start()
-        conn.connect()
-        conn.subscribe(destination='/%s' % room.comet_id, ack='auto')
+        if not room.get_turn_member().user == request.user:
+            return HttpResponse("fail")
 
-        try:
-            chip_id = int(request.POST.get('chip_id'))
-        except (ValueError, TypeError):
-            pass
+        action = request.POST.get('action')
+        if action == 'game_start':
+            extra = {
+                'action':'game_start',
+            }
+            msg_to_send = room.to_JSON(user=request.user, extra=extra)
         else:
-            member = room.get_member(request.user)
             try:
-                chip = member.chips.filter(id=chip_id)[0]
-            except IndexError:
+                chip_id = int(request.POST.get('chip_id'))
+            except (ValueError, TypeError):
                 pass
             else:
-                room_json = room.to_JSON()
-                msg_to_send = json.dumps({
-                    'room': room_json,
-                    'chip': {
-                        'chip_id': chip.id,
-                        'left': chip.left,
-                        'right': chip.right,
-                    },
-                })
+                member = room.get_member(request.user)
+                try:
+                    chip = member.chips.filter(id=chip_id)[0]
+                except IndexError:
+                    pass
+                else:
+                    if not room.can_next(chip):
+                        return HttpResponse("fail")
 
-        conn.send(msg_to_send, destination='/%s' % room.comet_id)
+                    chip.on_table = True
+                    chip.is_border_mark = True
+                    chip.save()
+
+                    room_json = room.to_JSON()
+                    msg_to_send = json.dumps({
+                        'room': room_json,
+                        'chip': {
+                            'chip_id': chip.id,
+                            'left': chip.left,
+                            'right': chip.right,
+                        },
+                    })
+
+        room.send_message(msg_to_send)
     return HttpResponse("ok")
 

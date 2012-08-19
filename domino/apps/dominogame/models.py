@@ -10,6 +10,8 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.conf import settings
 
+import stomp
+
 
 CHIP_VALUES = (
     (0, 'empty'),
@@ -114,13 +116,14 @@ class GameRoom(models.Model):
             member = GameMember.objects.filter(room=self, user=user)[0]
         except IndexError:
             member = GameMember.objects.create(room=self, user=user)
-            for i in xrange(5):
+            for i in xrange(7):
                 chip = self.get_random_chip()
                 if chip:
                     chip.used = True
                     chip.save()
                     member.chips.add(chip)
             member.save()
+            self.send_message(self.to_JSON(extra={'action':'join_member'}))
         return member
 
 
@@ -134,7 +137,7 @@ class GameRoom(models.Model):
             return None
 
 
-    def to_JSON(self, user=None):
+    def to_JSON(self, user=None, extra={}):
         members = []
         for m in self.room_members.all():
             members.append({
@@ -143,7 +146,7 @@ class GameRoom(models.Model):
                 'chips_count': m.chips.count(),
             })
 
-        game = []
+        log = self.get_tree_chips()
 
         my_chips = []
         if user:
@@ -152,20 +155,88 @@ class GameRoom(models.Model):
             except IndexError:
                 pass
             else:
-                for c in member.chips.all():
+                for c in member.chips.filter(on_table=False):
                     my_chips.append({
                         'id': c.id,
                         'left': c.left,
                         'right': c.right,
                     })
 
+        turn_member = self.get_turn_member()
+        if turn_member:
+            turn_user_id = turn_member.user.id
+        else:
+            turn_user_id = None
+
         data = {
             'members': members,
-            'game': game,
+            'log': log,
             'my_chips': my_chips,
+            'turn_user_id': turn_user_id,
         }
+        data.update(extra)
 
         return json.dumps(data)
+
+
+    def table_is_clear(self):
+        return self.room_chips.filter(on_table=True).count() == 0
+
+
+    def can_next(self, chip):
+        if self.table_is_clear(): #Table is clear
+            return self.get_turn_chip() == chip
+
+
+    def get_turn_chip(self):
+        members_chips = self.room_chips.filter(used=True)
+        first_chip = members_chips.filter(left=1, right=1)
+        if first_chip:
+            return first_chip[0]
+        else:
+            for chip in members_chips.all().order_by('left', 'right'):
+                if chip.left == chip.right:
+                    return chip
+        return None
+
+
+    def get_tree_chips(self):
+        try:
+            first_chip = self.room_chips \
+                .filter(on_table=True, prev__isnull=True)[0]
+        except IndexError:
+            return []
+        tree = []
+        chip = first_chip
+        while True:
+            tree.append(chip)
+            try:
+                chip = chip.next_chip.get()
+            except GameChip.DoesNotExist:
+                break
+        return tree
+
+
+    def get_turn_member(self):
+        if self.room_members.count() < 2:
+            return None
+
+        if self.table_is_clear(): #Table is clear
+            chip = self.get_turn_chip()
+            if chip:
+                return chip.users_chips.get()
+            else:
+                return None
+        else:
+            return self.get_tree_chips()[-1].users_chips.get()
+
+
+    def send_message(self, msg):
+        conn = stomp.Connection()
+        conn.start()
+        conn.connect()
+        conn.subscribe(destination='/%s' % self.comet_id, ack='auto')
+        conn.send(msg, destination='/%s' % self.comet_id)
 
 
 class GameChip(models.Model):
@@ -176,8 +247,10 @@ class GameChip(models.Model):
     left = models.IntegerField(_(u"Left value"), choices=CHIP_VALUES, db_index=True)
     right = models.IntegerField(_(u"Right value"), choices=CHIP_VALUES, db_index=True)
     angle = models.IntegerField(_(u'Angle'), default=0, choices=CHIP_ANGLES, db_index=True)
-    prev = models.ForeignKey('self', verbose_name=_(u'Previous chip'), null=True, blank=True, db_index=True)
+    prev = models.ForeignKey('self', verbose_name=_(u'Previous chip'), null=True, blank=True, db_index=True, related_name='next_chip')
     used = models.BooleanField(_(u'Used chip'), default=False, db_index=True)
+    on_table = models.BooleanField(_(u'Chip on table'), default=False, db_index=True)
+    is_border_mark = models.BooleanField(_(u'Is border mark'), default=False)
 
 
     class Meta:

@@ -126,6 +126,7 @@
 
     function Chip(id, left, right, angle) {
         //Temporary chip object
+        //Похоже уже не временный? :)
         console.log('Chip init');
         this.id = id;
         this.left = left;
@@ -199,6 +200,46 @@
         return this;
     }
 
+    var ROOM = {};
+    ROOM.status = 'wait';
+    ROOM.members = [];
+    ROOM.log = [];
+    ROOM.can_start = function () {
+        if (ROOM.members.length > 1 && ROOM.turn_user_id){
+            ROOM.status = 'can_start';
+            $('#start_button').removeAttr('disabled');
+            console.log('Members in room', ROOM.members.length, 'Can start game');
+        } else {
+            console.log('Members in room', ROOM.members.length, 'Wait');
+        }
+    };
+    ROOM.can_turn = function () {
+        if (ROOM.turn_user_id == my_id){
+            my_turn = true;
+            $('#status').text('You can turn');
+        } else {
+            my_turn = false;
+            $('#status').text('Wait you turn');
+        }
+    }
+    ROOM.start_game = function () {
+        $.ajax({
+            url: '{% url game_step room.id %}',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                'action': 'game_start'
+            },
+            success: function (data) {
+            },
+            error: function (r) {
+                console.log(r);
+            }
+        });
+    }
+
+
+
     $(document).ready(function() {
         load_game_status();
         start_comet_channel();
@@ -225,12 +266,15 @@
         };
         stomp.onmessageframe = function(frame){
             data = $.parseJSON(frame.body);
+            console.group('Data from stomp');
             console.log(data);
             switch (data.action) {
                 case ('ping'): {
                     break;
                 }
                 case ('game_start'): {
+                    ROOM.status = 'game_start';
+                    ROOM.can_turn();
                     break;
                 }
                 case ('game_end'): {
@@ -248,6 +292,11 @@
                 case ('user_out'): {
                     break;
                 }
+                case ('join_member'): {
+                    $.extend(ROOM, data);
+                    ROOM.can_start();
+                    break;
+                }
                 case ('new_user_chip'): {
                     break;
                 }
@@ -255,6 +304,7 @@
                     break;
                 }
             }
+            console.groupEnd();
         };
         stomp.connect('{{ STOMP.host }}', {{ STOMP.port }});
 
@@ -271,7 +321,9 @@
                     $('#status').html('{% trans "not started" %}');
                 }
 
-                console.log(data);
+                $.extend(ROOM, data);
+                ROOM.can_start();
+
                 n = 1;
                 $(data.members).each(function (i, e) {
                     if (e.id == my_id) {
@@ -403,6 +455,7 @@
 
 {% block content %}
     <h1>{% trans "Game" %}: {{ room.pk }} <span id="status"></span></h1>
+    <button id="start_button" disabled onclick="ROOM.start_game()">Start</button>
     <div id="gamemain">
             <div id="user2"><div id="username_2"></div></div>
             <div id="user1"><div id="username_1"></div></div>

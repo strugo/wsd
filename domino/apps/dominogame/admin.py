@@ -25,6 +25,13 @@ class GameRoomAdmin(admin.ModelAdmin):
         GameChipInline,
     )
 
+
+class GameMemberAdmin(admin.ModelAdmin):
+    list_display = (
+        'user',
+        'room',
+    )
+
 admin.site.register(GameRoom, GameRoomAdmin)
 admin.site.register(GameChip)
 admin.site.register(GameMember)

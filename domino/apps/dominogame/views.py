@@ -171,3 +171,25 @@ def game_step(request, room_id):
         print ''
     return HttpResponse(json.dumps({'status': 'ok'}))
 
+
+@login_required
+def chat_message(request, room_id):
+    try:
+        room = GameRoom.objects.get(id=room_id)
+    except GameRoom.DoesNotExist:
+        raise Http404()
+
+    if not room.room_members.all().filter(user=request.user):
+        raise Http404()
+
+    message = request.POST.get('message', '')
+
+    if message:
+        msg = {
+            'action': 'chat_message',
+            'username': request.user.username,
+            'message': message,
+        }
+        room.send_message(json.dumps(msg))
+
+    return HttpResponse(json.dumps({'status': 'ok'}))

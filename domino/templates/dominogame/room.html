@@ -338,7 +338,7 @@
                     break;
                 }
                 case ('chat_message'): {
-                    break;
+                    new_chat_message(data);
                 }
                 case ('user_out'): {
                     break;
@@ -655,6 +655,34 @@
         $('#user'+id).append(chip.get_html());
     }
 
+    function send_chat_message() {
+        var message = $("#chat_input_string").val();
+        //var message = '123';
+        var data = {
+            message: message
+        };
+        $.ajax({
+            url: '{% url chat_message room.pk %}',
+            type: 'POST',
+            dataType: 'json',
+            data: data,
+            success: function (data) {
+                console.log(data);
+                $("#chat_input_string").val('');
+                }
+            ,
+            error: function (r) {
+                console.log(r);
+            }
+        });
+        return false;
+    }
+
+    function new_chat_message(data) {
+        $obj = $('<p>'+data.username+': '+data.message+'</p>');
+        $('#chat').append($obj);
+    }
+
     </script>
 {% endblock %}
 
@@ -670,7 +698,12 @@
             <div id="my_chips"><div id="username_me"></div></div>
 
             <div id="chat">
-                <div id="chat_input"><form action="" onsubmit="send_chat_message()"><input type="text" id="chat_input_string"></form></div>
+
+            </div>
+            <div id="chat_input">
+                <form method="POST" action="{% url chat_message room.pk %}" onSubmit="send_chat_message(); return false;">
+                    <input type="text" id="chat_input_string">
+                </form>
             </div>
 
     </div>

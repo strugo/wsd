@@ -157,6 +157,7 @@ class GameRoom(models.Model):
                 'id': c.id,
                 'left': c.left,
                 'right': c.right,
+                'prev_id': c.prev_id,
             })
 
 

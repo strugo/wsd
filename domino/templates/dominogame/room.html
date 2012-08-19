@@ -402,6 +402,10 @@
                     var chip = new Chip(data['my_chips'][i].id, data['my_chips'][i].left, data['my_chips'][i].right, 1);
                     my_chips.append(chip.get_html());
                 }
+
+                for (var i in data['log']) {
+                    place_new_chip(data['log'][i].left, data['log'][i].right, data['log'][i].id, data['log'][i].prev_id);
+                }
             }
         });
     }

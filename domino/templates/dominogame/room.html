@@ -454,7 +454,7 @@
                         step = 10;
                         var container = $('#user'+n);
                         for (var k=0;k<e.chips_count;k++) {
-                            var chip = HiddenChip(angle);
+                            var chip = new HiddenChip(angle);
                             container.append(chip.get_html());
                         }
                         n++;
@@ -527,7 +527,7 @@
     function place_new_chip(left, right, id, prev_id) {
         if (!prev_id) {
             // first chip
-            var chip = Chip(id, left, right, 0);
+            var chip = new Chip(id, left, right, 0);
             chip.on_table = true;
             $("#gamefield").append(chip.get_html());
             $("#chip_"+id).offset(count_offset(start_x, start_y));
@@ -574,7 +574,7 @@
                         angle = 2;
                     }
                 }
-                chip = Chip(id, left, right, angle);
+                chip = new Chip(id, left, right, angle);
                 chip.on_table = true;
                 chip.direction = direction;
                 $("#gamefield").append(chip.get_html());
@@ -643,7 +643,7 @@
                         angle = 2;
                     }
                 }
-                chip = Chip(id, left, right, angle);
+                chip = new Chip(id, left, right, angle);
                 chip.on_table = true;
                 chip.direction = direction;
                 $("#gamefield").append(chip.get_html());
@@ -693,7 +693,7 @@
         var id = users[user_id]
         var angle = 1
         if (id == 2) angle=0
-        var chip = HiddenChip(angle);
+        var chip = new HiddenChip(angle);
         $('#user'+id).append(chip.get_html());
     }
 

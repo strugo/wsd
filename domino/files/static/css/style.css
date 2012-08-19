@@ -485,6 +485,7 @@ table tr td {
 }
 
 #gamefield {
+    float: left;
     position: absolute;
     left: 130px;
     top: 90px;
@@ -498,14 +499,14 @@ table tr td {
     overflow: auto;
 }
 
-#gamefield div {
-    display: table-cell;
-}
-
 .chip_0 {
+    display: block;
+    float: left;
     width: 70px;
     height: 35px;
+    overflow: hidden;
     background: url(/static/images/chip_0_0.png) no-repeat;
+    background-repeat: no-repeat;
 }
 
 .chip_0 img {
@@ -518,8 +519,11 @@ table tr td {
 }
 
 .chip_1 {
+    float: left;
+    display: block;
     width: 35px;
     height: 70px;
+    overflow: hidden;
     background-image: url(/static/images/chip_1_0.png);
     background-repeat: no-repeat;
 }

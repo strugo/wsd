@@ -114,6 +114,19 @@
         }
     });
 
+    function send_message(data, success) {
+        $.ajax({
+            url: '{% url game_step room.id %}',
+            type: 'POST',
+            dataType: 'json',
+            data: data,
+            success: success,
+            error: function (r) {
+                console.log(r);
+            }
+        });
+    }
+
     function HiddenChip(angle) {
         this.angle = angle;
         this.get_html = function() {
@@ -246,9 +259,9 @@
         if (ROOM.members.length > 1 && ROOM.turn_user_id){
             ROOM.status = 'can_start';
             $('#start_button').removeAttr('disabled');
-            console.log('Members in room', ROOM.members.length, 'Can start game');
-        } else {
-            console.log('Members in room', ROOM.members.length, 'Wait');
+        }
+        if (ROOM.is_active){
+            $('#start_button').hide();
         }
     };
     ROOM.can_turn = function () {
@@ -280,6 +293,23 @@
             return true;
         else
             return false
+    }
+    ROOM.get_chip = function () {
+        data = {
+            action: 'get_chip',
+        }
+        success = function (data) {
+            console.log(data);
+            var chip = new Chip(data.id, data.left, data.right, 1);
+            $('#my_chips').append(chip.get_html());
+        }
+        send_message(data, success);
+    }
+    ROOM.check_bank = function ()  {
+        if (ROOM.chips_in_bank > 0)
+            $('#get_chip').removeAttr('disabled');
+        else
+            $('#get_chip').attr('disabled', true);
     }
 
 
@@ -318,6 +348,7 @@
                 }
                 case ('game_start'): {
                     ROOM.status = 'game_start';
+                    $('#start_button').hide();
                     ROOM.can_turn();
                     break;
                 }
@@ -332,6 +363,7 @@
                     place_new_chip(data.left, data.right, data.id, data.prev_id);
                     ROOM.turn_user_id = data.turn_user_id;
                     ROOM.can_turn();
+                    ROOM.check_bank();
                     $('.my_selected').removeClass('my_selected');
                     my_selected_chip = null;
 
@@ -374,6 +406,8 @@
 
                 $.extend(ROOM, data);
                 ROOM.can_start();
+                ROOM.can_turn();
+                ROOM.check_bank();
 
                 n = 1;
                 $(data.members).each(function (i, e) {
@@ -415,49 +449,34 @@
         if ((my_selected_chip) && (table_selected_chip)) {
             self.on_table = true;
             var data = {
+                action: process_turn,
                 chip_id: my_selected_chip.id,
                 table_id: table_selected_chip.id
             }
-            $.ajax({
-                url: '{% url game_step room.id %}',
-                type: 'POST',
-                dataType: 'json',
-                data: data,
-                success: function (data) {
-                    console.log(data);
-                    if (data.status == 'ok') {
-                        $('#chip_'+my_selected_chip.id).remove();
-                    } else {
-                        $('#chip_'+my_selected_chip.id).removeClass('my_selected');
-                    }
-                },
-                error: function (r) {
-                    console.log(r);
+            var success = function (data) {
+                if (data.status == 'ok') {
+                    $('#chip_'+my_selected_chip.id).remove();
+                } else {
+                    $('#chip_'+my_selected_chip.id).removeClass('my_selected');
                 }
-            });
+
+            }
 
         } else if (my_selected_chip && ROOM.table_is_clear()) {
             var data = {
+                action: process_turn,
                 chip_id: my_selected_chip.id,
             }
-            $.ajax({
-                url: '{% url game_step room.id %}',
-                type: 'POST',
-                dataType: 'json',
-                data: data,
-                success: function (data) {
-                    console.log(data);
-                    if (data == 'ok') {
-                        $('#chip_'+self.id).remove();
-                    } else {
-                        $('#chip_'+self.id).removeClass('my_selected');
-                    }
-                },
-                error: function (r) {
-                    console.log(r);
+            var success = function (data) {
+                console.log(data);
+                if (data == 'ok') {
+                    $('#chip_'+self.id).remove();
+                } else {
+                    $('#chip_'+self.id).removeClass('my_selected');
                 }
-            });
+            }
         }
+        send_message(data, success);
         return
     }
 
@@ -689,6 +708,7 @@
 {% block content %}
     <h1>{% trans "Game" %}: {{ room.pk }} <span id="status"></span></h1>
     <button id="start_button" disabled onclick="ROOM.start_game()">Start</button>
+    <button id="get_chip" disabled onclick="ROOM.get_chip()">Get chip</button>
     <div id="gamemain">
             <div id="user2"><div id="username_2"></div></div>
             <div id="user1"><div id="username_1"></div></div>

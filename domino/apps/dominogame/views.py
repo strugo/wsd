@@ -128,7 +128,17 @@ def game_step(request, room_id):
         action = request.POST.get('action')
         if action == 'game_start':
             room.game_start()
-        else:
+        elif action == 'get_chip':
+            member = room.get_member(request.user)
+            random_chip = room.get_random_chip()
+            member.chips.add(random_chip)
+            member.save()
+            extra = {
+                'status': 'ok',
+            }
+            return HttpResponse(random_chip.to_JSON(extra=extra))
+            
+        elif action == 'process_turn':
             try:
                 chip_id = int(request.POST.get('chip_id'))
             except (ValueError, TypeError):

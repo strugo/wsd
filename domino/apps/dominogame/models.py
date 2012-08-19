@@ -181,11 +181,15 @@ class GameRoom(models.Model):
         else:
             turn_user_id = None
 
+        chips_in_bank = self.room_chips.filter(used=False).count()
+
         data = {
             'members': members,
             'log': log,
             'my_chips': my_chips,
             'turn_user_id': turn_user_id,
+            'is_active': self.is_active,
+            'chips_in_bank': chips_in_bank,
         }
         data.update(extra)
 
@@ -234,36 +238,26 @@ class GameRoom(models.Model):
 
 
     def get_turn_member(self):
-        print '-'*40
         if self.room_members.count() < 2:
             return None
 
         if self.table_is_clear(): #Table is clear
-            print 'Table is clear'
             chip = self.get_turn_chip()
             if chip:
                 return chip.users_chips.get()
             else:
                 return None
         else:
-            print 'Table with chips'
-            print self.get_tree_chips()
             last_turn_member = self.get_tree_chips()[-1].users_chips.get()
-            print 'last_turn_member %s' % last_turn_member
             members = self.get_all_members()
             i = 1
             for m in members:
                 if m == last_turn_member:
-                    print 'Find %s' % m
                     if i == len(members):
-                        print 'I == len(members)'
                         to_return = members[0]
-                        print 'to_return %s' % to_return
                         return to_return
                     else:
-                        print 'I <> len(members)'
                         to_return = members[i]
-                        print 'to_return %s' % to_return
                         return to_return
                 i+=1
 
@@ -274,6 +268,8 @@ class GameRoom(models.Model):
         }
         #msg_to_send = self.to_JSON(user=request.user, extra=extra)
         #self.send_message(msg_to_send)
+
+        self.is_active = True
 
         chip = self.get_turn_chip()
         chip.on_table = True
@@ -297,6 +293,7 @@ class GameRoom(models.Model):
             'turn_user_id': turn_user_id,
         }
         self.send_message(chip.to_JSON(extra=extra))
+        self.save()
 
 
     def send_message(self, msg):

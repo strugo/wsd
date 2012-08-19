@@ -205,6 +205,7 @@
             }
 
             $obj.click(function () {
+                console.log('chip click');
                 if (!my_turn) {
                     // not my turn
                     return;
@@ -218,10 +219,12 @@
 
                         if ((self.left != my_selected_chip.left) && (self.left != my_selected_chip.right)
                                 && (self.right != my_selected_chip.left) && (self.right != my_selected_chip.right)) {
+                            console.log('wrong chip');
                             return;
                         }
 
                         table_selected_chip = self;
+                        console.log('process');
                         process_turn();
                     }
                 } else {
@@ -486,7 +489,6 @@
 
     function count_offset(x, y) {
         var offset = $('#gamefield').offset();
-        console.log(offset);
         var data = {
             top: y + offset.top,
             left: x + offset.left
@@ -508,11 +510,8 @@
             table[id].next = null;
             table[id].prev = null;
             table[id].direction = 0;
-            console.log(table);
 
         } else {
-            console.log('Turn');
-            console.log(id, prev_id);
             var prev = table[prev_id];
             var field_offset = $("#gamefield").offset();
             var angle = 0;
@@ -576,13 +575,10 @@
                 table[id].direction = direction;
                 table[prev_id].next = table[id];
                 table[id].prev = table[prev_id];
-                console.log(table);
             } else {
                 console.log('Rear');
                 var angle = 0;
                 var direction = prev.direction;
-                console.log(prev);
-                console.log(prev.direction);
                 if ((prev.direction == 0) && (prev.next)) {
                     if (prev.next.direction == 0) {
                         direction = 2;
@@ -653,7 +649,6 @@
                 table[id].direction = direction;
                 table[prev_id].next = table[id];
                 table[id].next = table[prev_id];
-                console.log(table);
             }
 
         }

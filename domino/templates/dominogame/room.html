@@ -2,54 +2,6 @@
 {% load i18n %}
 
 {% block extra_js %}
-{% comment %}
-<script type="text/javascript">
-
-    var start_x = 20;
-    var start_y = 20;
-    var chips = {};
-
-    $(document).ready(
-            function() {
-                load_game_status();
-                start_comet_channel();
-            });
-
-    function load_game_status() {
-        $.post("{% url domino_load_game_status rook.pk %}", function(data) {
-            if(data['status'] == 1) {
-                $('#status').html('{% trans "started" %}');
-            } else {
-                $('#status').html('{% trans "not started" %}');
-            }
-
-            for (var chip in data['chips']) {
-                draw_chip(data['chips'][chip]);
-            }
-        });
-    }
-
-    function draw_chip(chip) {
-        var left = chip[0];
-        var right = chip[1];
-        var prev = chip[3];
-        var angle = 0;
-        var x = start_x;
-        var y = start_y;
-        if (left == right) {
-            angle = 1;
-        }
-
-        if (chips.length > 0) {
-            prev = chips[prev];
-            if (prev[1] == right) {
-                angle = 2;
-            }
-            if
-        }
-    }
-</script>
-{% endcomment %}
     <script src="/static/js/json2.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js" type="text/javascript"></script>
     <script src="/static/orbited/Orbited.js"></script>
@@ -63,56 +15,10 @@
     <script> document.domain = document.domain; </script>
     <script src="/static/orbited/protocols/stomp/stomp.js"></script>
 
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/dnd.js"></script>
+
     <script type="text/javascript" charset="utf-8">
-
-        var my_id = {{ request.user.pk }};
-        //var my_turn = false;
-        var my_turn = false;
-        var table = {};
-        var my_selected_chip = null;
-        var table_selected_chip = null;
-
-        var start_x = 350;
-        var start_y = 200;
-
-        var users = {};
-
-        jQuery(document).ajaxSend(function(event, xhr, settings) {
-        function getCookie(name) {
-            var cookieValue = null;
-            if (document.cookie && document.cookie != '') {
-                var cookies = document.cookie.split(';');
-                for (var i = 0; i < cookies.length; i++) {
-                    var cookie = jQuery.trim(cookies[i]);
-                    // Does this cookie string begin with the name we want?
-                    if (cookie.substring(0, name.length + 1) == (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-        function sameOrigin(url) {
-            // url could be relative or scheme relative or absolute
-            var host = document.location.host; // host + port
-            var protocol = document.location.protocol;
-            var sr_origin = '//' + host;
-            var origin = protocol + sr_origin;
-            // Allow absolute or scheme relative URLs to same origin
-            return (url == origin || url.slice(0, origin.length + 1) == origin + '/') ||
-                (url == sr_origin || url.slice(0, sr_origin.length + 1) == sr_origin + '/') ||
-                // or any other URL that isn't scheme relative or absolute i.e relative.
-                !(/^(\/\/|http:|https:).*/.test(url));
-        }
-        function safeMethod(method) {
-            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-        }
-
-        if (!safeMethod(settings.type) && sameOrigin(settings.url)) {
-            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
-        }
-    });
 
     function send_message(data, success) {
         $.ajax({
@@ -127,6 +33,18 @@
         });
     }
 
+    var my_id = {{ request.user.pk }};
+    //var my_turn = false;
+    var my_turn = false;
+    var table = {};
+    var my_selected_chip = null;
+    var table_selected_chip = null;
+
+    var start_x = 350;
+    var start_y = 200;
+
+    var users = {};
+
     function HiddenChip(angle) {
         this.angle = angle;
         this.get_html = function() {
@@ -138,10 +56,6 @@
     }
 
     function Chip(id, left, right, angle) {
-        //Temporary chip object
-        //Похоже уже не временный? :)
-        //Совсем не временный
-        console.log('Chip init');
         this.id = id;
         this.left = left;
         this.right = right;
@@ -170,18 +84,16 @@
                     }
                 }
                 if (self.direction == 1) {
-                    console.log('direction == 1');
                     if (self.angle == 0) {
                         $obj = $('<div class="chip_1">');
-                        $obj.append($('<img src="/static/images/value_1_'+this.left+'.png">'));
-                        $obj.append($('<img src="/static/images/value_1_'+this.right+'.png"></div>'));
-                        $obj.attr('id', 'chip_'+self.id);
-                    } else {
-                        $obj = $('<div class="chip_1">');
+                        $obj.append($('<img src="/static/images/value_1_'+this.left+'.png">'));  
+                        $obj.append($('<img src="/static/images/value_1_'+this.right+'.png"></d  iv>'));
+                        $obj.attr('id', 'chip_'+self.id);                                        
+                    } else {                                                                     
+                        $obj = $('<div class="chip_1">');                                        
                         $obj.append($('<img src="/static/images/value_1_'+this.right+'.png">'));
                         $obj.append($('<img src="/static/images/value_1_'+this.left+'.png"></div>'));
                         $obj.attr('id', 'chip_'+self.id);
-                        console.log($obj);
                     }
                 }
                 if (self.direction == 2) {
@@ -198,80 +110,71 @@
                     }
                 }
             } else {
-                $obj = $('<div class="chip_'+this.angle+' my_chip">');
+                $obj = $('<div class="chip_'+this.angle+' my_chip drag_chip">');
                 $obj.append($('<img src="/static/images/value_'+this.angle+'_'+this.left+'.png">'));
                 $obj.append($('<img src="/static/images/value_'+this.angle+'_'+this.right+'.png"></div>'));
                 $obj.attr('id', 'chip_'+self.id);
             }
 
-            $obj.click(function () {
-                console.log('chip click');
-                if (!my_turn) {
-                    // not my turn
-                    return;
-                }
-
-                if (self.on_table == true) {
-                    if (my_selected_chip) {
-                        console.log(self.left, self.right, self.id);
-                        var item = table[self.id];
-                        //var item = self;
-
-                        console.log(item.prev, item.next);
-                        if (item.next)  {
-                            console.log('here');
-                            if (item.prev) {
-                                console.log('here');
-                                return
-                            };
-                            // from another side
-                            var number = 0;
-                            if ((item.next.left == item.right) || (item.next.right == item.right)){
-                                number = item.left;
-                            } else{
-                                if ((item.next.left == item.left) || (item.next.right == item.left)) {
-                                    number = item.right;
-                                }
-                            }
-                            if ((my_selected_chip.left != number) && (my_selected_chip.right != number)) {
-                                console.log('wrong chip');
-                                return
-                            }
-                        } else {
-                            var number = 0;
-                            if (item.prev) {
-                                if ((item.prev.left == item.right) || (item.prev.right == item.right)){
-                                    number = item.left;
-                                } else{
-                                    if ((item.prev.left == item.left) || (item.prev.right == item.left)) {
-                                        number = item.right;
-                                    }
-                                }
-                                if ((my_selected_chip.left != number) && (my_selected_chip.right != number)) {
-                                    console.log('wrong chip 2 1');
-                                    return
-                                }
-                            } else {
-                                    if ((item.left != my_selected_chip.left) && (item.left != my_selected_chip.right)
-                                            && (self.right != my_selected_chip.left) && (self.right != my_selected_chip.right)) {
-                                        console.log('wrong chip 2 2');
-                                        return;
-                                    }
-                            }
-                        }
-
-                        table_selected_chip = self;
-                        console.log('process');
-                        process_turn();
-                    }
-                } else {
-                    if (my_selected_chip) {
-                        $('#chip_'+my_selected_chip.id).removeClass('my_selected');
-                    }
-                    $('#chip_'+self.id).addClass('my_selected');
-                    my_selected_chip = self;
-                }
-            });
+//            $obj.click(function () {
+//                if (!my_turn) {
+//                    // not my turn
+//                    return;
+//                }
+//
+//                if (self.on_table == true) {
+//                    if (my_selected_chip) {
+//                        var item = table[self.id];
+//                        //var item = self;
+//
+//                        if (item.next)  {
+//                            if (item.prev) {
+//                                return
+//                            };
+//                            // from another side
+//                            var number = 0;
+//                            if ((item.next.left == item.right) || (item.next.right == item.right)){
+//                                number = item.left;
+//                            } else{
+//                                if ((item.next.left == item.left) || (item.next.right == item.left)) {
+//                                    number = item.right;
+//                                }
+//                            }
+//                            if ((my_selected_chip.left != number) && (my_selected_chip.right != number)) {
+//                                return
+//                            }
+//                        } else {
+//                            var number = 0;
+//                            if (item.prev) {
+//                                if ((item.prev.left == item.right) || (item.prev.right == item.right)){
+//                                    number = item.left;
+//                                } else{
+//                                    if ((item.prev.left == item.left) || (item.prev.right == item.left)) {
+//                                        number = item.right;
+//                                    }
+//                                }
+//                                if ((my_selected_chip.left != number) && (my_selected_chip.right != number)) {
+//                                    return
+//                                }
+//                            } else {
+//                                    if ((item.left != my_selected_chip.left) && (item.left != my_selected_chip.right)
+//                                            && (self.right != my_selected_chip.left) && (self.right != my_selected_chip.right)) {
+//                                        return;
+//                                    }
+//                            }
+//                        }
+//
+//                        table_selected_chip = self;
+//                        process_turn();
+//                    }
+//                } else {
+//                    if (my_selected_chip) {
+//                        $('#chip_'+my_selected_chip.id).removeClass('my_selected');
+//                    }
+//                    $('#chip_'+self.id).addClass('my_selected');
+//                    my_selected_chip = self;
+//                }
+//            });
 
             return $obj[0]
         }
@@ -318,7 +221,6 @@
             success: function (data) {
             },
             error: function (r) {
-                console.log(r);
             }
         });
     }
@@ -374,8 +276,6 @@
         };
         stomp.onmessageframe = function(frame){
             data = $.parseJSON(frame.body);
-            console.group('Data from stomp');
-            console.log(data);
             switch (data.action) {
                 case ('ping'): {
                     break;
@@ -422,7 +322,6 @@
                     break;
                 }
             }
-            console.groupEnd();
         };
         stomp.connect('{{ STOMP.host }}', {{ STOMP.port }});
 

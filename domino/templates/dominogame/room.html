@@ -55,10 +55,11 @@
         return this;
     }
 
-    function Chip(id, left, right, angle) {
+    function Chip(id, left, right, angle, is_border_mark) {
         this.id = id;
         this.left = left;
         this.right = right;
+        this.is_border_mark = is_border_mark;
 
         this.angle = angle;
         this.direction = 0;
@@ -72,7 +73,9 @@
             if (self.on_table) {
                 if (self.direction == 0) {
                     if (self.angle == 0) {
-                        $obj = $('<div class="chip_0">');
+                        $obj = $('<div class="chip_0 chip_on_table">');
+                        if (this.is_border_mark)
+                            $obj.addClass('is_border_mark');
                         $obj.append($('<img src="/static/images/value_'+this.angle+'_'+this.left+'.png">'));
                         $obj.append($('<img src="/static/images/value_'+this.angle+'_'+this.right+'.png"></div>'));
                         $obj.attr('id', 'chip_'+self.id);
@@ -367,12 +370,12 @@
 
                 var my_chips = $('#my_chips');
                 for (var i in data['my_chips']) {
-                    var chip = new Chip(data['my_chips'][i].id, data['my_chips'][i].left, data['my_chips'][i].right, 1);
+                    var chip = new Chip(data['my_chips'][i].id, data['my_chips'][i].left, data['my_chips'][i].right, 1, false);
                     my_chips.append(chip.get_html());
                 }
 
                 for (var i in data['log']) {
-                    place_new_chip(data['log'][i].left, data['log'][i].right, data['log'][i].id, data['log'][i].prev_id);
+                    place_new_chip(data['log'][i].left, data['log'][i].right, data['log'][i].id, data['log'][i].prev_id, data['log'][i].is_border_mark);
                 }
             }
         });
@@ -428,10 +431,10 @@
         return data;
     }
 
-    function place_new_chip(left, right, id, prev_id) {
+    function place_new_chip(left, right, id, prev_id, is_border_mark) {
         if (!prev_id) {
             // first chip
-            var chip = new Chip(id, left, right, 0);
+            var chip = new Chip(id, left, right, 0, is_border_mark);
             chip.on_table = true;
             $("#gamefield").append(chip.get_html());
             $("#chip_"+id).offset(count_offset(start_x, start_y));

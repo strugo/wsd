@@ -160,6 +160,8 @@ class GameRoom(models.Model):
                 'left': c.left,
                 'right': c.right,
                 'prev_id': c.prev_id,
+                'angle': c.angle,
+                'is_border_mark': c.is_border_mark,
             })
         for l in log:
             print l
@@ -358,6 +360,7 @@ class GameChip(models.Model):
             'left' : self.left,
             'right' : self.right,
             'prev_id': prev_id,
+            'is_border_mark': self.is_border_mark,
         }
         data.update(extra)
         return json.dumps(data)

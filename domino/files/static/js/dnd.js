@@ -1,22 +1,89 @@
-    function getElementUnderClientXY(elem, clientX, clientY) {
-        var display = elem.style.display || '';
-        elem.style.display = 'none';
+function getElementXY(clientX, clientY) {
+    var target = document.elementFromPoint(clientX, clientY);
 
-        var target = document.elementFromPoint(clientX, clientY);
-
-        elem.style.display = display;
-
-        if (!target || target == document) {
-          target = document.body;
-        }
-
-        return target;
+    if (!target || target == document) {
+      target = document.body;
     }
+
+    return target;
+}
+
+function getElementUnderClientXY(elem, clientX, clientY) {
+    var display = elem.style.display || '';
+    elem.style.display = 'none';
+
+    var target = getElementXY(clientX, clientY);
+
+    elem.style.display = display;
+
+    return target;
+}
+
+function getDivElementXY(clientX, clientY) {
+    var target = getElementXY(clientX, clientY);
+    while (target != document && target.tagName != 'DIV') {
+        target = target.parentNode;
+    }
+    return target;
+}
+
+var DOTS = []
+var i = 0;
+while (i < 4) {
+    var d = document.createElement('div');
+    d.style.position = 'absolute';
+    DOTS.push(d);
+    i++
+}
+
+DOTS[0].style.border = '3px solid red';
+DOTS[1].style.border = '3px solid green';
+DOTS[2].style.border = '3px solid yellow';
+DOTS[3].style.border = '3px solid blue';
+//DOTS[d].style.left = X+'px';
+//DOTS[d].style.top = Y+'px';
+//DOTS[d].textContent = X + ' ' + Y;
+//document.body.appendChild(DOTS[d]);
+
+var tableManager = new function () {
+    var self = this;
+    var _elem = document.getElementById('gamefield');
+
+    this.over = function (clientX, clientY) {
+        var m = this.getMetric();
+        return (clientX >= m.x) && (clientX <= m.x + m.width) && (clientY >= m.y) && (clientY <= m.y + m.height);
+    }
+
+    this.getMetric = function () {
+        //FIXME: не нужно определять _elem каждый раз.
+        this._elem = document.getElementById('gamefield');
+        var pos = $(this._elem).offset();
+        return {
+            x: pos.left,
+            y: pos.top,
+            width: this._elem.offsetWidth,
+            height: this._elem.offsetHeight
+        }
+    }
+
+    this.getTarget = function (avatar, event) {
+        var border_chips = $('.is_border_mark');
+
+        for (var i = border_chips.length - 1; i >= 0; i--) {
+            var target = new DropTarget(border_chips[i])
+            if (target.concateWith(avatar))
+                return target;
+        }
+        return null;
+
+    }
+}
 
 var dragManager = new function() {
 
-    var dragChip, avatar, dropTarget;
+    var dragChip, avatar, dropTarget, lastDropTarget;
     var downX, downY;
+    var lastX, lastY;
 
     var self = this;
 
@@ -31,8 +98,8 @@ var dragManager = new function() {
             return;
         }
 
-        downX = e.pageX;
-        downY = e.pageY;
+        downX = lastX = e.pageX;
+        downY = lastY = e.pageY;
 
         return false;
     }
@@ -54,16 +121,20 @@ var dragManager = new function() {
 
         avatar.onDragMove(e);
 
-        var newDropTarget = findDropTarget(e);
 
-        if (newDropTarget != dropTarget) {
-            dropTarget && dropTarget.onDragLeave(newDropTarget, avatar, e);
-            //newDropTarget && newDropTarget.onDragEnter(dropTarget, avatar, e);
-        }
+        //var step = 0;
+        //if ( Math.abs(e.pageX-lastX) > step && Math.abs(e.pageY-lastY) > step ) {
+            dropTarget = tableManager.getTarget(avatar, e);
+            dropTarget && dropTarget.onDragMove(avatar, e);
+            if (lastDropTarget && (!dropTarget || lastDropTarget.id != dropTarget.id)) {
+                lastDropTarget.onDragLeave();
 
-        dropTarget = newDropTarget;
+            }
+            lastDropTarget = dropTarget;
 
-        dropTarget && dropTarget.onDragMove(avatar, e);
+            lastX = e.pageX;
+            lastY = e.pageY;
+        //}
 
         return false;
     }
@@ -104,19 +175,23 @@ var dragManager = new function() {
         return new DragChip(elem);
     }
 
-    function findDropTarget(event) {
-        var elem = avatar.getTargetElem();
+    //function findDropTarget(event) {
+        //var elem = tableManager.getTarget();
 
-        while(elem != document && elem.id != 'gamefield') {
-            elem = elem.parentNode;
-        }
+        //if (!elem) {
+            //return null;
+        //}
 
-        if (elem.id != 'gamefield') {
-            return null;
-        }
+        //while(elem != document && elem.id != 'gamefield') {
+            //elem = elem.parentNode;
+        //}
 
-        return new DropTarget(elem);
-    }
+        //if (elem.id != 'gamefield') {
+            //return null;
+        //}
+
+        //return new DropTarget(elem);
+    //}
 
     document.ondragstart = function() {
         return false;
@@ -148,6 +223,7 @@ function DragAvatar(dragChip, dragElem) {
     this._dragChip = dragChip;
     this._dragChipElem = dragElem;
     this._elem = dragElem;
+    this._currentTargetElem = null;
 
     this._destroy = function () {
         this._elem.parentNode.removeChild(this._elem);
@@ -180,15 +256,9 @@ function DragAvatar(dragChip, dragElem) {
         }
     }
 
-    this.getTargetElem = function () {
-        return this._currentTargetElem;
-    }
-
     this.onDragMove = function(event) {
         this._elem.style.left = event.pageX - this._shiftX + 'px';
         this._elem.style.top = event.pageY - this._shiftY + 'px';
-
-        this._currentTargetElem = getElementUnderClientXY(this._elem, event.clientX, event.clientY)
     }
 
     this.onDragCancel = function () {
@@ -198,94 +268,69 @@ function DragAvatar(dragChip, dragElem) {
     this.onDragEnd = function () {
         this._destroy()
     }
+
+    this.getMetric = function () {
+        return {
+            x: parseInt(this._elem.style.left),
+            y: parseInt(this._elem.style.top),
+            width: this._elem.offsetWidth,
+            height: this._elem.offsetHeight
+        }
+    }
 }
 
 function DropTarget(elem) {
     elem.dropTarget = this;
     this._elem = elem;
-    this._targetElem = null;
-
-    this._getTargetElem = function (avatar, event) {
-        var target = avatar.getTargetElem();
-        if (target.id != 'gamefield') {
-            return;
-        }
-
-        var elemToMove = avatar.getDragInfo(event).dragChipElem.parentNode;
-
-        var elem = target;
-        while(elem) {
-            if (elem == elemToMove)
-                return;
-            elem = elem.parentNode;
-        }
-
-        return target;
-    }
+    this.id = elem.id;
 
     this._hideHoverIndication = function (avatar) {
-        //this._targetElem && removeClass(this._targetElem, 'hover');
-        //console.log('Убрать показ куда ставим кость');
     }
 
     this._showHoverIndication = function (avatar) {
-        //this._targetElem && addClass(this._targetElem, 'hover');
-        //console.log('Показать куда ставим кость');
     }
 
     this.onDragMove = function (avatar, event) {
-        var newTargetElem = this._getTargetElem(avatar, event);
-
-        if (this._targetElem != newTargetElem) {
-            this._hideHoverIndication(avatar);
-            this._targetElem = newTargetElem;
-            this._showHoverIndication(avatar);
-        }
+        $(this._elem).css('border', '3px solid red');
     }
 
     this.onDragEnter = function(fromDropTarget, avatar, event) {
-
-        //Это хрень и нужно написать свой вариант
-        if (!this._targetElem) {
-            avatar.onDragCancel();
-            return;
-        }
-
-        this._hideHoverIndication();
-
-        var avatarInfo = avatar.getDragInfo(event);
-
-        avatar.onDragEnd();
-
-        var elemToMove = avatarInfo.dragChipElem.parentNode;
-        var title = avatarInfo.dragChipElem.innerHTML;
-
-        var ul = this._targetElem.parentNode.getElementsByTagName('UL')[0];
-        if (!ul) {
-            ul = document.createElement('UL');
-            this._targetElem.parentNode.appendChild(ul);
-        }
-
-        var li = null;
-        for(var i=0; i < ul.children.length; i++) {
-            li = ul.children[i];
-            var childTitle = li.children[0].innerHTML;
-            if (childTitle > title) {
-                break;
-            }
-        }
-
-        ul.insertBefore(elemToMove, li);
-
-        this._targetElem = null;
     }
 
     this.onDragLeave = function(toDropTarget, avatar, event) {
-        this._hideHoverIndication();
-        this._targetElem = null;
+        $(this._elem).css('border', 'none');
     }
 
     this.onDragEnd = function (avatar, event) {
         console.log('Chip on Table', avatar.getDragInfo().dragChip);
+    }
+
+    this.getMetric = function () {
+        var pos = $(elem).offset();
+        return {
+            x: pos.left,
+            y: pos.top,
+            width: this._elem.offsetWidth,
+            height: this._elem.offsetHeight
+        }
+    }
+
+    this.concateWith = function (avatar) {
+        var d = 100;
+        var a_metric = avatar.getMetric()
+        var x1 = a_metric.x, x2 = x1 + a_metric.width, y1 = a_metric.y, y2 = y1 + a_metric.height;
+
+        var t_metric = this.getMetric();
+        var l = t_metric.x, r = l + t_metric.width, t = t_metric.y, b = t + t_metric.height;
+
+        var ts = Math.abs(t - y1) <= d;
+        var bs = Math.abs(b - y2) <= d;
+        var ls = Math.abs(l - x1) <= d;
+        var rs = Math.abs(r - x2) <= d;
+
+        if (ts && bs && ls && rs)
+            return true;
+
+        return false;
     }
 }

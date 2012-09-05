@@ -45,40 +45,6 @@ DOTS[3].style.border = '3px solid blue';
 //DOTS[d].textContent = X + ' ' + Y;
 //document.body.appendChild(DOTS[d]);
 
-var tableManager = new function () {
-    var self = this;
-    var _elem = document.getElementById('gamefield');
-
-    this.over = function (clientX, clientY) {
-        var m = this.getMetric();
-        return (clientX >= m.x) && (clientX <= m.x + m.width) && (clientY >= m.y) && (clientY <= m.y + m.height);
-    }
-
-    this.getMetric = function () {
-        //FIXME: не нужно определять _elem каждый раз.
-        this._elem = document.getElementById('gamefield');
-        var pos = $(this._elem).offset();
-        return {
-            x: pos.left,
-            y: pos.top,
-            width: this._elem.offsetWidth,
-            height: this._elem.offsetHeight
-        }
-    }
-
-    this.getTarget = function (avatar, event) {
-        var border_chips = $('.is_border_mark');
-
-        for (var i = border_chips.length - 1; i >= 0; i--) {
-            var target = new DropTarget(border_chips[i])
-            if (target.concateWith(avatar))
-                return target;
-        }
-        return null;
-
-    }
-}
-
 var dragManager = new function() {
 
     var dragChip, avatar, dropTarget, lastDropTarget;
@@ -124,7 +90,7 @@ var dragManager = new function() {
 
         //var step = 0;
         //if ( Math.abs(e.pageX-lastX) > step && Math.abs(e.pageY-lastY) > step ) {
-            dropTarget = tableManager.getTarget(avatar, e);
+            dropTarget = findDropTarget(avatar);
             dropTarget && dropTarget.onDragMove(avatar, e);
             if (lastDropTarget && (!dropTarget || lastDropTarget.id != dropTarget.id)) {
                 lastDropTarget.onDragLeave();
@@ -175,23 +141,16 @@ var dragManager = new function() {
         return new DragChip(elem);
     }
 
-    //function findDropTarget(event) {
-        //var elem = tableManager.getTarget();
+    function findDropTarget(avatar) {
+        var border_chips = $('.is_border_mark');
 
-        //if (!elem) {
-            //return null;
-        //}
-
-        //while(elem != document && elem.id != 'gamefield') {
-            //elem = elem.parentNode;
-        //}
-
-        //if (elem.id != 'gamefield') {
-            //return null;
-        //}
-
-        //return new DropTarget(elem);
-    //}
+        for (var i = border_chips.length - 1; i >= 0; i--) {
+            var target = new DropTarget(border_chips[i])
+            if (target.concateWith(avatar))
+                return target;
+        }
+        return null;
+    }
 
     document.ondragstart = function() {
         return false;

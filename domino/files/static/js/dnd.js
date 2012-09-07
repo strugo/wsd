@@ -94,7 +94,6 @@ var dragManager = new function() {
             dropTarget && dropTarget.onDragMove(avatar, e);
             if (lastDropTarget && (!dropTarget || lastDropTarget.id != dropTarget.id)) {
                 lastDropTarget.onDragLeave();
-
             }
             lastDropTarget = dropTarget;
 
@@ -240,7 +239,7 @@ function DragAvatar(dragChip, dragElem) {
 
 function DropTarget(elem) {
     elem.dropTarget = this;
-    this._elem = elem;
+    this.$_elem = $(elem);
     this.id = elem.id;
 
     this._hideHoverIndication = function (avatar) {
@@ -249,33 +248,92 @@ function DropTarget(elem) {
     this._showHoverIndication = function (avatar) {
     }
 
+    this.showFantom = function (pos) {
+        var metric = this.getMetric();
+        switch (pos) {
+            case 'top':
+                var width = 35, height = 70;
+                var x = metric.x + (metric.width / 2) - (width / 2);
+                var y = metric.y - height - 2;
+                break
+            case 'bottom':
+                var width = 35, height = 70;
+                var x = metric.x + (metric.width / 2) - (width / 2);
+                var y = metric.y + metric.height;
+                break
+            case 'left':
+                var width = 70, height = 35;
+                var x = metric.x - width - 1;
+                var y = metric.y;
+                break
+            case 'right':
+                var width = 70, height = 35;
+                var x = metric.x + metric.width - 1;
+                var y = metric.y;
+                break
+        }
+
+        $('#fantom').remove();
+        var f = $('<div>').attr('id', 'fantom')
+            .css({
+                'border': '1px solid yellow',
+                'position': 'absolute',
+                'width': width+'px',
+                'height': height+'px',
+                'left': x+'px',
+                'top': y+'px'
+            }).appendTo('body');
+    }
+
     this.onDragMove = function (avatar, event) {
-        $(this._elem).css('border', '3px solid red');
+        this.$_elem.css('border', 'none');
+        var a_metric = avatar.getMetric()
+        var a_x = a_metric.x + (a_metric.width / 2),
+            a_y = a_metric.y + (a_metric.height / 2);
+
+        var t_metric = this.getMetric();
+        var t_x = t_metric.x + (t_metric.width / 2),
+            t_y = t_metric.y + (t_metric.height / 2);
+        var xs = a_x - t_x, ys = a_y - t_y;
+        if (Math.abs(xs) > Math.abs(ys)) {
+            if (xs < 0)
+                this.showFantom('left');
+            else
+                this.showFantom('right');
+        } else {
+            if (ys < 0)
+                this.showFantom('top');
+            else
+                this.showFantom('bottom');
+        }
     }
 
     this.onDragEnter = function(fromDropTarget, avatar, event) {
     }
 
     this.onDragLeave = function(toDropTarget, avatar, event) {
-        $(this._elem).css('border', 'none');
+        this.$_elem.css('border', 'none');
+        $('#fantom').remove();
     }
 
     this.onDragEnd = function (avatar, event) {
         console.log('Chip on Table', avatar.getDragInfo().dragChip);
+        this.$_elem.css('border', 'none');
+        $('#fantom').remove();
     }
 
     this.getMetric = function () {
-        var pos = $(elem).offset();
+        var pos = this.$_elem.offset();
         return {
             x: pos.left,
             y: pos.top,
-            width: this._elem.offsetWidth,
-            height: this._elem.offsetHeight
+            width: this.$_elem.outerWidth(),
+            height: this.$_elem.outerHeight()
         }
     }
 
     this.concateWith = function (avatar) {
-        var d = 100;
+        var d = 110;
         var a_metric = avatar.getMetric()
         var x1 = a_metric.x, x2 = x1 + a_metric.width, y1 = a_metric.y, y2 = y1 + a_metric.height;
 

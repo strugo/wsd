@@ -68,8 +68,12 @@ def get_new_chip(request):
 @login_required
 def room_select(request):
     open_room_list = GameRoom.objects.filter(is_closed=False, is_finished=False)
+    members = GameMember.objects.filter(user=request.user)
+    my_open_games = GameRoom.objects \
+        .filter(room_members__in=members, is_finished=False)
     data = {
         'open_room_list': open_room_list,
+        'my_open_games': my_open_games,
     }
     return render_to_response("dominogame/room_select.html", data, context_instance=RequestContext(request))
 

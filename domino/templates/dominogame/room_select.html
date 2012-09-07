@@ -12,4 +12,13 @@ or select from list:<br />
     </tr>
 {% endfor %}
 </table>
+You not finished games
+<table border=1>
+{% for room in my_open_games %}
+    <tr>
+        <td>{{ room }}</td>
+        <td><a href="{% url room room.id %}">Open</a></td>
+    </tr>
+{% endfor %}
+</table>
 {% endblock %}

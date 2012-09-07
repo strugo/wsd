@@ -269,12 +269,12 @@ function DropTarget(elem) {
             case 'left':
                 var width = 70, height = 35;
                 var x = metric.x - width - 1;
-                var y = metric.y;
+                var y = metric.y + (metric.height / 2) - (height / 2);
                 break
             case 'right':
                 var width = 70, height = 35;
                 var x = metric.x + metric.width - 1;
-                var y = metric.y;
+                var y = metric.y + (metric.height / 2) - (height / 2);
                 break
         }
 
@@ -302,6 +302,7 @@ function DropTarget(elem) {
 
         switch (this.CHIP.angle) {
             case 0:
+            case 2:
                 var a_y = a_metric.y + (a_metric.height / 2);
                 var t_y = t_metric.y + (t_metric.height / 2);
                 var ys = a_y - t_y;
@@ -312,6 +313,7 @@ function DropTarget(elem) {
                 break
 
             case 1:
+            case 3:
                 var a_x = a_metric.x + (a_metric.width / 2);
                 var t_x = t_metric.x + (t_metric.width / 2);
                 var xs = a_x - t_x;

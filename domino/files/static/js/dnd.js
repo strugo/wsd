@@ -92,7 +92,7 @@ var dragManager = new function() {
         //if ( Math.abs(e.pageX-lastX) > step && Math.abs(e.pageY-lastY) > step ) {
             dropTarget = findDropTarget(avatar);
             dropTarget && dropTarget.onDragMove(avatar, e);
-            if (lastDropTarget && (!dropTarget || lastDropTarget.id != dropTarget.id)) {
+            if (lastDropTarget && (!dropTarget || lastDropTarget.CHIP.id != dropTarget.CHIP.id)) {
                 lastDropTarget.onDragLeave();
             }
             lastDropTarget = dropTarget;
@@ -163,6 +163,7 @@ var dragManager = new function() {
 function DragChip(elem) {
     elem.dragChipElem = this;
     this._elem = elem;
+    this.CHIP = this._elem.CHIP;
 
     this.makeAvatar = function () {
         return new DragAvatar(this, this._elem);
@@ -182,6 +183,7 @@ function DragAvatar(dragChip, dragElem) {
     this._dragChipElem = dragElem;
     this._elem = dragElem;
     this._currentTargetElem = null;
+    this.CHIP = this._elem.CHIP;
 
     this._destroy = function () {
         this._elem.parentNode.removeChild(this._elem);
@@ -240,7 +242,8 @@ function DragAvatar(dragChip, dragElem) {
 function DropTarget(elem) {
     elem.dropTarget = this;
     this.$_elem = $(elem);
-    this.id = elem.id;
+    this.CHIP = elem.CHIP;
+    this.phantomPos = null;
 
     this._hideHoverIndication = function (avatar) {
     }
@@ -248,9 +251,11 @@ function DropTarget(elem) {
     this._showHoverIndication = function (avatar) {
     }
 
-    this.showFantom = function (pos) {
+    this.showPhantom = function (pos) {
+        if (pos != undefined)
+            this.phantomPos = pos
         var metric = this.getMetric();
-        switch (pos) {
+        switch (this.phantomPos) {
             case 'top':
                 var width = 35, height = 70;
                 var x = metric.x + (metric.width / 2) - (width / 2);
@@ -285,26 +290,39 @@ function DropTarget(elem) {
             }).appendTo('body');
     }
 
+    this.hidePhantom = function () {
+        $('#fantom').remove();
+        this.phantomPos = null;
+    }
+
     this.onDragMove = function (avatar, event) {
         this.$_elem.css('border', 'none');
         var a_metric = avatar.getMetric()
-        var a_x = a_metric.x + (a_metric.width / 2),
-            a_y = a_metric.y + (a_metric.height / 2);
-
         var t_metric = this.getMetric();
-        var t_x = t_metric.x + (t_metric.width / 2),
-            t_y = t_metric.y + (t_metric.height / 2);
-        var xs = a_x - t_x, ys = a_y - t_y;
-        if (Math.abs(xs) > Math.abs(ys)) {
-            if (xs < 0)
-                this.showFantom('left');
-            else
-                this.showFantom('right');
-        } else {
-            if (ys < 0)
-                this.showFantom('top');
-            else
-                this.showFantom('bottom');
+
+        switch (this.CHIP.angle) {
+            case 0:
+                var a_y = a_metric.y + (a_metric.height / 2);
+                var t_y = t_metric.y + (t_metric.height / 2);
+                var ys = a_y - t_y;
+                if (ys < 0)
+                    this.showPhantom('top');
+                else
+                    this.showPhantom('bottom');
+                break
+
+            case 1:
+                var a_x = a_metric.x + (a_metric.width / 2);
+                var t_x = t_metric.x + (t_metric.width / 2);
+                var xs = a_x - t_x;
+                if (xs < 0)
+                    this.showPhantom('left');
+                else
+                    this.showPhantom('right');
+                break
+
+            default:
+                this.hidePhantom();
         }
     }
 
@@ -317,7 +335,7 @@ function DropTarget(elem) {
     }
 
     this.onDragEnd = function (avatar, event) {
-        console.log('Chip on Table', avatar.getDragInfo().dragChip);
+        console.log('Chip on Table', avatar.getDragInfo().dragChip._elem.CHIP);
         this.$_elem.css('border', 'none');
         $('#fantom').remove();
     }
@@ -332,7 +350,7 @@ function DropTarget(elem) {
         }
     }
 
-    this.concateWith = function (avatar) {
+    this.checkDistance = function (avatar) {
         var d = 110;
         var a_metric = avatar.getMetric()
         var x1 = a_metric.x, x2 = x1 + a_metric.width, y1 = a_metric.y, y2 = y1 + a_metric.height;
@@ -348,6 +366,15 @@ function DropTarget(elem) {
         if (ts && bs && ls && rs)
             return true;
 
+        return false;
+    }
+
+    this.concateWith = function (avatar) {
+        if (avatar.CHIP.left == this.CHIP.left || avatar.CHIP.left == this.CHIP.right) {
+            return this.checkDistance(avatar);
+        } else if (avatar.CHIP.right == this.CHIP.left || avatar.CHIP.right == this.CHIP.right) {
+            return this.checkDistance(avatar);
+        }
         return false;
     }
 }
